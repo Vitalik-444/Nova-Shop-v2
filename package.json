@@ -1,0 +1,29 @@
+{
+  "name": "novashop",
+  "version": "2.0.0",
+  "description": "NovaShop: React-фронтенд + Node.js/Express + PostgreSQL",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "db:migrate": "node scripts/migrate.js",
+    "db:migrate:demo": "node scripts/migrate.js --with-demo-data",
+    "db:import-mysql": "node scripts/import-mysql.js",
+    "db:smoke": "node scripts/smoke.js",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "nodemailer": "^10.0.0",
+    "pg": "^8.13.1"
+  },
+  "optionalDependencies": {
+    "mysql2": "^3.24.3"
+  }
+}

@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: myproject
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./db/docker/init:/docker-entrypoint-initdb.d:ro
+      - ./db/data:/data:ro
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5051:80"
+volumes:
+  pgdata:
