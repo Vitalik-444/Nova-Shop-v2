@@ -1,6 +1,5 @@
 # NovaShop
 
-<<<<<<< HEAD
 <p align="left">
   <img src="https://img.shields.io/badge/React-18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
   <img src="https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
@@ -10,10 +9,6 @@
   <img src="https://img.shields.io/badge/PostgreSQL-18-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
 </p>
-=======
-Магазин: фронтенд на React/Vite (уже собран в `index.html` + `assets/`), бэкенд на **Node.js/Express**
-и база **PostgreSQL**. Схема БД — из курсового проекта `db-2026`, миграции накатывает `scripts/migrate.js`.
->>>>>>> eef7411 (feat(db): switch to postgres seed export/import and cleanup mysql)
 
 A full-stack e-commerce storefront built with **React**, **Node.js / Express** and **PostgreSQL**.
 
@@ -87,7 +82,6 @@ NovaShop provides a complete shopping flow — catalog browsing, favorites, cart
 ## Project Structure
 
 ```
-<<<<<<< HEAD
 .
 ├── server.js                 # Express app: sessions, static files, API mounting
 ├── server/
@@ -110,20 +104,6 @@ NovaShop provides a complete shopping flow — catalog browsing, favorites, cart
 ├── images/                   # Static images
 ├── docker-compose.yml        # PostgreSQL + pgAdmin
 └── .env.example              # Environment template
-=======
-server.js              Express: сессии, статика фронтенда, API /api/*.php
-server/db.js           пул PostgreSQL (роль app_user — без прав на изменение схемы)
-server/lib/mapping.js  соответствие «формат ответов API ↔ схема PostgreSQL»
-server/routes/*.js     auth, products, cart, favorites, orders, reviews, admin
-db/sql/001…012         миграции PostgreSQL
-db/seed/data.sql       данные магазина (создаётся командой db:export-seed)
-db/queries, db/docs    запросы и схема из лабораторных
-scripts/migrate.js     накат миграций (таблица schema_migrations)
-scripts/seed.js        загрузка данных из db/seed/data.sql
-scripts/export-seed.js выгрузка данных из БД в db/seed/data.sql
-scripts/smoke.js       сквозная проверка API (45 проверок)
-frontend/              исходники React (npm run frontend:build пересобирает бандл)
->>>>>>> eef7411 (feat(db): switch to postgres seed export/import and cleanup mysql)
 ```
 
 ---
@@ -139,7 +119,6 @@ frontend/              исходники React (npm run frontend:build пере
 ### Installation
 
 ```bash
-<<<<<<< HEAD
 # 1. Configure environment
 cp .env.example .env
 
@@ -345,52 +324,3 @@ BASE_URL=http://localhost:3000 ADMIN_EMAIL=admin@example.com ADMIN_PASS=secret n
 
 ---
 
-=======
-cp .env.example .env            # при необходимости поправьте пароли/порты
-npm install
-docker compose up -d            # PostgreSQL на :5433 (+ pgAdmin на :5051); создаёт роль app_user
-npm run db:migrate              # схема: миграции 001–012
-npm run db:seed                 # данные магазина из db/seed/data.sql
-npm start                       # http://localhost:3000
-```
-
-Без Docker достаточно установленного PostgreSQL: `db:migrate` сам создаст базу и роль `app_user`, если их нет
-(порт и пароль задаются в `.env`).
-
-* Перезаписать данные: `npm run db:seed -- --truncate`.
-* Сохранить текущие данные базы в репозиторий: `npm run db:export-seed`.
-* Проверка API: `BASE_URL=http://localhost:3000 npm run db:smoke`
-  (с `ADMIN_EMAIL`/`ADMIN_PASS` проверит и админку).
-* Разработка фронтенда: `npm start` + `npm run frontend:dev` (Vite на :5173 проксирует `/api` на :3000).
-
-Миграции `002_seed.sql` и `005_bulk.sql` (учебные тестовые данные «Товар #N») по умолчанию **пропускаются**;
-нужны только для лабораторных — `npm run db:migrate:demo`.
-
-## Модель данных
-
-Схема из `db/sql/001–011` без изменений. Единственное добавление — миграция `012_storefront_fields.sql`:
-`products.attributes jsonb` (бренд, SKU, мини-картинка и галерея, скидка, базовый рейтинг, вес, гарантия, доставка,
-политика возврата) и `orders.customer_data jsonb` (контакты и адрес доставки).
-
-Как схема соотносится с форматом, который ждёт фронтенд:
-
-* **Категория** — `categories.name` хранит slug (например, `mens-shirts`); название для интерфейса строится из него.
-* **Продавец** — `products.seller_id → users`; на сайте показывается `users.full_name`.
-* **Роли** — в БД `buyer / seller / moderator / admin`; фронтенд видит `user` / `admin`.
-  Тот, кто выставил товар, становится `seller`.
-* **Корзина и избранное** — в `user_cart` / `user_favorites` только пары (пользователь, товар) и количество;
-  данные товара берутся JOIN-ом из `products`.
-* **Сумма заказа** считается из `order_items` (`SUM(quantity * price_at_purchase)`), заголовок позиции берётся из `products`.
-* **Статусы заказа** — в БД `pending / paid / shipped / delivered / cancelled`;
-  фронтенд видит `new / processing / shipped / completed / cancelled` (преобразование в API).
-* **Рейтинг** — базовый рейтинг товара (`attributes.rating`) усредняется с оценками из `product_reviews`.
-
-## Поведение, которое задаёт схема PostgreSQL
-
-* Оформление заказа — одна транзакция: блокировка товаров `FOR UPDATE` → заказ → позиции → **списание остатка** → очистка корзины.
-  Если товара не хватает, ответ 409 с понятным текстом.
-* Товар, который есть в оформленных заказах, **нельзя удалить** (`order_items → products ON DELETE RESTRICT`) — API отвечает 409.
-* Повторный отзыв того же покупателя обновляет прежний (`UNIQUE (product_id, buyer_id)`).
-* Смена статуса заказа пишется триггером в `orders_audit`.
-* Статика отдаётся только из `assets/`, `images/` и `index.html`.
->>>>>>> eef7411 (feat(db): switch to postgres seed export/import and cleanup mysql)
