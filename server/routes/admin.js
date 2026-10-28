@@ -37,7 +37,7 @@ router.all('/', async (req, res) => {
                 total: Number(o.total),
                 status: STATUS_FROM_DB[o.status] || o.status,
                 created_at: o.created_at,
-                customer_data: o.customer_data ? JSON.stringify(o.customer_data) : null, // як було в MySQL: JSON-рядок
+                customer_data: o.customer_data ? JSON.stringify(o.customer_data) : null, // фронтенд очікує JSON-рядок
                 user_name: o.user_name || 'Видалений користувач',
                 user_email: o.user_email || ''
             }));

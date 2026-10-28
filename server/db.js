@@ -3,7 +3,7 @@ require('dotenv').config();
 
 // Застосунок підключається від ролі app_user: читає й пише дані, але не змінює схему.
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgres://app_user:app_pass@localhost:5432/myproject',
+    connectionString: process.env.DATABASE_URL || 'postgres://app_user:app_pass@localhost:5433/myproject',
     max: 10
 });
 

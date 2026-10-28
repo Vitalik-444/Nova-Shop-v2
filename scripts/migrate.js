@@ -10,10 +10,10 @@ const SQL_DIR = path.join(__dirname, '..', 'db', 'sql');
 const INIT_ROLE_SQL = path.join(__dirname, '..', 'db', 'docker', 'init', '01_app_user.sql');
 const FILE_RE = /^(\d{3})_([a-z0-9_]+)\.sql$/;
 // 002_seed.sql і 005_bulk.sql — навчальні тестові дані (лаби 1–7). У робочому проєкті
-// дані беруться з MySQL (npm run db:import-mysql), тому ці два файли за замовчуванням пропускаються.
+// дані беруться з db/seed/data.sql (npm run db:seed), тому ці два файли за замовчуванням пропускаються.
 const DEMO_DATA = new Set([2, 5]);
 
-const url = process.env.DATABASE_MIGRATOR_URL || 'postgres://postgres:postgres@localhost:5432/myproject';
+const url = process.env.DATABASE_MIGRATOR_URL || 'postgres://postgres:postgres@localhost:5433/myproject';
 const withDemo = process.argv.includes('--with-demo-data');
 
 async function ensureDatabase() {
@@ -30,12 +30,16 @@ async function ensureDatabase() {
 }
 
 async function ensureAppRole(client, dbName) {
-    const r = await client.query(`SELECT 1 FROM pg_roles WHERE rolname = 'app_user'`);
-    if (r.rowCount) return;
-    // поза docker-compose ролі ще немає — створюємо тим самим скриптом, що й docker/init
+    // скрипт docker/init: CREATE ROLE + права на базу/схему + права по умолчанию для будущих таблиц.
     const sql = fs.readFileSync(INIT_ROLE_SQL, 'utf8').replace(/DATABASE myproject/g, `DATABASE "${dbName}"`);
-    await client.query(sql);
-    console.log('  + створено роль app_user');
+    const exists = (await client.query(`SELECT 1 FROM pg_roles WHERE rolname = 'app_user'`)).rowCount > 0;
+    if (!exists) {
+        await client.query(sql);
+        console.log('  + створено роль app_user');
+        return;
+    }
+    // роль уже є (кластер спільний з іншою базою) — GRANT-и ідемпотентні, тож видаємо права і в цій базі
+    await client.query(sql.replace(/^\s*CREATE ROLE[^;]*;/m, ''));
 }
 
 (async () => {

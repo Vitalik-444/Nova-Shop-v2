@@ -7,7 +7,8 @@
     "start": "node server.js",
     "db:migrate": "node scripts/migrate.js",
     "db:migrate:demo": "node scripts/migrate.js --with-demo-data",
-    "db:import-mysql": "node scripts/import-mysql.js",
+    "db:seed": "node scripts/seed.js",
+    "db:export-seed": "node scripts/export-seed.js",
     "db:smoke": "node scripts/smoke.js",
     "frontend:dev": "npm --prefix frontend run dev",
     "frontend:build": "npm --prefix frontend run build"
@@ -22,8 +23,5 @@
     "express-session": "^1.19.0",
     "nodemailer": "^10.0.0",
     "pg": "^8.13.1"
-  },
-  "optionalDependencies": {
-    "mysql2": "^3.24.3"
   }
 }

@@ -1,4 +1,4 @@
-// Прошарок між контрактом фронтенду (API лишився тим самим, що й на MySQL)
+// Прошарок між контрактом фронтенду (формат відповідей API, який чекає React)
 // і схемою PostgreSQL з db/sql.
 const db = require('../db');
 
@@ -62,7 +62,7 @@ async function ensureCategory(client, name) {
 }
 
 /** id продавця за відображуваним іменем; створює службовий акаунт, якщо такого немає
- *  (так у MySQL-версії "NovaShop" і довільні імена продавців жили просто текстом). */
+ *  (у вітрині продавець — це просто ім'я, напр. "NovaShop"). */
 async function ensureSeller(client, name) {
     const found = await client.query(
         `SELECT id FROM users WHERE full_name = $1 AND role IN ('seller','admin') ORDER BY id LIMIT 1`, [name]);
