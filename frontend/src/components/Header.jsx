@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 
 export default function Header() {
-  const { t, user, cart, favorites, theme, toggleTheme, language, setLanguage } = useApp();
+  const { t, user, cart, favorites, theme, toggleTheme, isDarkTheme, language, setLanguage } = useApp();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
 
@@ -56,7 +56,7 @@ export default function Header() {
             </Link>
 
             <button className="action-btn" id="themeBtn" onClick={toggleTheme}>
-              <i className={theme === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon"}></i>
+              <i className={isDarkTheme(theme) ? "fa-solid fa-sun" : "fa-solid fa-moon"}></i>
             </button>
 
             <div className="language-switcher" title={t("language")}>

@@ -6,6 +6,7 @@ import Footer from "./Footer";
 import Toast from "./Toast";
 import Loader from "./Loader";
 import ScrollTop from "./ScrollTop";
+import ThemeEffects from "./ThemeEffects";
 
 const TITLE_KEYS = {
   "/": "pageHome",
@@ -17,11 +18,12 @@ const TITLE_KEYS = {
   "/register": "pageRegister",
   "/profile": "pageProfile",
   "/orders": "pageOrders",
-  "/admin": "pageAdmin"
+  "/admin": "pageAdmin",
+  "/settings": "pageSettings"
 };
 
 export default function Layout() {
-  const { t } = useApp();
+  const { t, theme, themeEffects } = useApp();
   const { pathname } = useLocation();
   const titleKey = pathname.startsWith("/product/") ? "pageProduct" : TITLE_KEYS[pathname];
 
@@ -35,6 +37,7 @@ export default function Layout() {
 
   return (
     <>
+      <ThemeEffects theme={theme} enabled={themeEffects} />
       <Header />
       <main>
         <Outlet />

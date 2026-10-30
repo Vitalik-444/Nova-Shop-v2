@@ -5,6 +5,86 @@ import { getStorage, setStorage, removeStorage } from "../utils/storage";
 
 const AppContext = createContext(null);
 
+export const THEMES = [
+  "dark", "light", "system", "midnight", "forest", "crimson",
+  "violet", "rose", "amoled", "sakura", "autumn", "halloween",
+  "newyear", "snow", "desert", "love", "leaves", "ocean",
+  "gold", "cyber", "lavender"
+];
+
+export const THEME_COLORS = {
+  // Dark variants
+  dark: { bg: "#121212", accent: "#00A046" },
+  midnight: { bg: "#060a14", accent: "#3b82f6" },
+  forest: { bg: "#060d09", accent: "#22c55e" },
+  crimson: { bg: "#0a0506", accent: "#ef233c" },
+  violet: { bg: "#09060f", accent: "#a855f7" },
+  rose: { bg: "#0d0609", accent: "#ff4d8d" },
+  amoled: { bg: "#000000", accent: "#f5f5f5" },
+  "sakura-dark": { bg: "#14080d", accent: "#f472b6" },
+  autumn: { bg: "#140b06", accent: "#e8832a" },
+  halloween: { bg: "#0b0614", accent: "#ff7a00" },
+  newyear: { bg: "#1a0509", accent: "#ff2d4f" },
+  snow: { bg: "#08111f", accent: "#7dd3fc" },
+  "desert-dark": { bg: "#160f09", accent: "#f97316" },
+  love: { bg: "#1b0716", accent: "#ff3d74" },
+  "leaves-dark": { bg: "#091208", accent: "#4ade80" },
+  ocean: { bg: "#041018", accent: "#06b6d4" },
+  gold: { bg: "#0c0905", accent: "#d4a73a" },
+  cyber: { bg: "#08060f", accent: "#00e5ff" },
+  "lavender-dark": { bg: "#0e0a19", accent: "#a78bfa" },
+
+  // Light variants
+  light: { bg: "#f5f5f5", accent: "#00A046" },
+  "midnight-light": { bg: "#f0f4fc", accent: "#2563eb" },
+  "forest-light": { bg: "#f0f9f3", accent: "#16a34a" },
+  "crimson-light": { bg: "#fcf1f2", accent: "#dc2626" },
+  "violet-light": { bg: "#f7f2fd", accent: "#9333ea" },
+  "rose-light": { bg: "#fdf2f6", accent: "#e11d48" },
+  "amoled-light": { bg: "#ffffff", accent: "#111111" },
+  sakura: { bg: "#fdf0f3", accent: "#e8527f" },
+  "autumn-light": { bg: "#faf3eb", accent: "#d97706" },
+  "halloween-light": { bg: "#fbf5ff", accent: "#ea580c" },
+  "newyear-light": { bg: "#fff5f6", accent: "#e11d48" },
+  "snow-light": { bg: "#f0f8ff", accent: "#0284c7" },
+  desert: { bg: "#f6e9d0", accent: "#c8571e" },
+  "love-light": { bg: "#fef2f6", accent: "#e11d48" },
+  leaves: { bg: "#eef6e6", accent: "#3f9a2b" },
+  "ocean-light": { bg: "#f0fafd", accent: "#0891b2" },
+  "gold-light": { bg: "#fbf8ee", accent: "#ca8a04" },
+  "cyber-light": { bg: "#f3f6ff", accent: "#0284c7" },
+  lavender: { bg: "#f4f1fb", accent: "#7c5cdb" },
+};
+
+export function isDarkTheme(th) {
+  if (th === "system") {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  if (th === "light" || th === "sakura" || th === "desert" || th === "leaves" || th === "lavender") {
+    return false;
+  }
+  if (th.endsWith("-light")) {
+    return false;
+  }
+  return true;
+}
+
+export function getThemeFamily(th) {
+  if (th === "system") return "system";
+  if (th === "light" || th === "dark") return "default";
+  return th.replace(/-light$|-dark$/, "");
+}
+
+export function getThemeVariant(family, wantDark) {
+  if (family === "system") return "system";
+  if (family === "default") return wantDark ? "dark" : "light";
+  if (family === "sakura") return wantDark ? "sakura-dark" : "sakura";
+  if (family === "desert") return wantDark ? "desert-dark" : "desert";
+  if (family === "leaves") return wantDark ? "leaves-dark" : "leaves";
+  if (family === "lavender") return wantDark ? "lavender-dark" : "lavender";
+  return wantDark ? family : `${family}-light`;
+}
+
 export function useApp() {
   return useContext(AppContext);
 }
@@ -109,35 +189,94 @@ export function AppProvider({ children }) {
 
   const [themeEffects, setThemeEffects] = useState(() => getStorage("themeEffects", true));
   const [blurPreviews, setBlurPreviews] = useState(() => getStorage("blurPreviews", false));
+  const [scrollTopButton, setScrollTopButton] = useState(() => getStorage("scrollTopButton", true));
+  const [defaultCurrency, setDefaultCurrency] = useState(() => getStorage("defaultCurrency", "USD"));
+  const [defaultSort, setDefaultSort] = useState(() => getStorage("defaultSort", "popular"));
 
   useEffect(() => {
-    let activeTheme = theme;
-    if (theme === "system") {
-      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      activeTheme = prefersDark ? "dark" : "light";
-    }
-    const isLight = activeTheme === "light" || activeTheme === "sakura" || activeTheme === "lavender" || activeTheme === "desert" || activeTheme === "leaves";
-    document.body.classList.toggle("dark", !isLight);
-    document.body.setAttribute("data-theme", theme);
-    document.documentElement.setAttribute("data-theme", theme);
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    const apply = () => {
+      let resolved = theme;
+      if (theme === "system") {
+        resolved = media.matches ? "light" : "dark";
+      }
+      document.documentElement.dataset.theme = resolved;
+      document.body.setAttribute("data-theme", resolved);
+      const isDark = isDarkTheme(resolved);
+      document.body.classList.toggle("dark", isDark);
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[resolved]?.bg || "#121212");
+      document.querySelector('meta[name="color-scheme"]')?.setAttribute("content", isDark ? "dark" : "light");
+    };
+    apply();
     setStorage("theme", theme);
+    if (theme !== "system") return;
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
   }, [theme]);
 
   useEffect(() => {
+    document.documentElement.dataset.effects = themeEffects ? "on" : "off";
     setStorage("themeEffects", themeEffects);
   }, [themeEffects]);
 
   useEffect(() => {
     setStorage("blurPreviews", blurPreviews);
-    document.body.classList.toggle("blur-previews", blurPreviews);
+    document.body.classList.toggle("blur-thumbs", blurPreviews);
+    document.documentElement.classList.toggle("blur-thumbs", blurPreviews);
   }, [blurPreviews]);
+
+  useEffect(() => {
+    setStorage("scrollTopButton", scrollTopButton);
+  }, [scrollTopButton]);
+
+  useEffect(() => {
+    setStorage("defaultCurrency", defaultCurrency);
+  }, [defaultCurrency]);
+
+  useEffect(() => {
+    setStorage("defaultSort", defaultSort);
+  }, [defaultSort]);
 
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
 
   const toggleTheme = useCallback(() => {
-    setTheme(current => (current === "dark" ? "light" : "dark"));
+    setTheme(current => {
+      if (current === "system") {
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        return prefersDark ? "light" : "dark";
+      }
+      const currentlyDark = isDarkTheme(current);
+      const family = getThemeFamily(current);
+      return getThemeVariant(family, !currentlyDark);
+    });
+  }, []);
+
+  const resetSettings = useCallback(() => {
+    setTheme("light");
+    setThemeEffects(true);
+    setBlurPreviews(false);
+    setScrollTopButton(true);
+    setDefaultCurrency("USD");
+    setDefaultSort("popular");
+  }, []);
+
+  const clearSearchHistory = useCallback(() => {
+    removeStorage("recent_searches");
+    removeStorage("search_history");
+  }, []);
+
+  const clearAppCache = useCallback(() => {
+    const keysToKeep = [
+      "theme", "themeEffects", "blurPreviews", "scrollTopButton",
+      "defaultCurrency", "defaultSort", "language", "token"
+    ];
+    Object.keys(localStorage).forEach(key => {
+      if (!keysToKeep.includes(key)) {
+        localStorage.removeItem(key);
+      }
+    });
   }, []);
 
   const setLanguage = useCallback(value => {
@@ -253,10 +392,22 @@ export function AppProvider({ children }) {
     theme,
     setTheme,
     toggleTheme,
+    isDarkTheme,
+    getThemeFamily,
+    getThemeVariant,
     themeEffects,
     setThemeEffects,
     blurPreviews,
     setBlurPreviews,
+    scrollTopButton,
+    setScrollTopButton,
+    defaultCurrency,
+    setDefaultCurrency,
+    defaultSort,
+    setDefaultSort,
+    resetSettings,
+    clearSearchHistory,
+    clearAppCache,
     user,
     updateUser,
     ready,
@@ -276,7 +427,9 @@ export function AppProvider({ children }) {
     register,
     logout
   }), [
-    language, setLanguage, t, formatPrice, theme, setTheme, toggleTheme, themeEffects, blurPreviews, user, updateUser, ready, splash, busy,
+    language, setLanguage, t, formatPrice, theme, setTheme, toggleTheme, themeEffects, blurPreviews,
+    scrollTopButton, defaultCurrency, defaultSort, resetSettings, clearSearchHistory, clearAppCache,
+    user, updateUser, ready, splash, busy,
     withLoader, toast, showToast, cart, addToCart, changeQuantity, removeFromCart, clearCart,
     favorites, isFavorite, toggleFavorite, login, register, logout
   ]);

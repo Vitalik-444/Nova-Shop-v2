@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
 
 export default function App() {
   return (
@@ -26,7 +27,7 @@ export default function App() {
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="profile" element={<RequireAuth><Profile /></RequireAuth>} />
-        <Route path="settings" element={<RequireAuth><Profile defaultTab="settings" /></RequireAuth>} />
+        <Route path="settings" element={<Settings />} />
         <Route path="orders" element={<RequireAuth><Orders /></RequireAuth>} />
         <Route path="admin" element={<Admin />} />
         <Route path="*" element={<Navigate to="/" replace />} />
