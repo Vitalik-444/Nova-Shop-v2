@@ -26,7 +26,10 @@ export default function Checkout() {
     setForm(current => ({
       ...current,
       name: current.name || user.name,
-      email: current.email || user.email
+      email: current.email || user.email,
+      phone: current.phone || user.phone || "",
+      city: current.city || user.city || "",
+      address: current.address || user.address || ""
     }));
   }, [user]);
 

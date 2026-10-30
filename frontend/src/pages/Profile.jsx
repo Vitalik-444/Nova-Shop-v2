@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { addProduct, deleteMyProduct, getCategories, getMyProducts, getOrders } from "../api";
+import SettingsView from "../components/SettingsView";
 
 const EMPTY_FORM = {
   title: "",
@@ -155,13 +156,24 @@ function SellerModal({ open, onClose, onSaved }) {
   );
 }
 
-export default function Profile() {
+export default function Profile({ defaultTab = "overview" }) {
   const { t, user, cart, favorites, toggleTheme, logout, showToast } = useApp();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(defaultTab || tabFromUrl || "overview");
   const sellerSection = useRef(null);
   const [ordersCount, setOrdersCount] = useState(null);
   const [myProducts, setMyProducts] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    } else if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [tabFromUrl, defaultTab]);
 
   const loadMyProducts = useCallback(async () => {
     const products = await getMyProducts();
@@ -199,135 +211,199 @@ export default function Profile() {
       <div className="container">
         <div className="profile-layout">
           <aside className="profile-sidebar">
-            <div className="profile-avatar">
-              <i className="fa-solid fa-user"></i>
+            <div className="profile-avatar" style={{ overflow: "hidden" }}>
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={event => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <i className="fa-solid fa-user"></i>
+              )}
             </div>
             <h2 id="profileName">{user.name}</h2>
             <p id="profileEmail">{user.email}</p>
+            {user.phone && (
+              <p style={{ fontSize: "13px", color: "var(--gray)", marginTop: "-10px", marginBottom: "15px" }}>
+                <i className="fa-solid fa-phone" style={{ marginRight: "6px" }}></i>
+                {user.phone}
+              </p>
+            )}
             <button className="btn logout-btn" onClick={onLogout}>{t("logout")}</button>
           </aside>
 
           <section className="profile-content">
             <h1 className="title">{t("account")}</h1>
 
-            <div className="profile-cards">
-              <div className="profile-card">
-                <i className="fa-solid fa-cart-shopping"></i>
-                <h3>{t("cart")}</h3>
-                <p>{t("itemsCount", { count: cart.length })}</p>
-                <Link to="/cart">{t("goTo")}</Link>
-              </div>
-
-              <div className="profile-card">
-                <i className="fa-solid fa-heart"></i>
-                <h3>{t("favoritesTitle")}</h3>
-                <p>{t("itemsCount", { count: favorites.length })}</p>
-                <Link to="/favorites">{t("goTo")}</Link>
-              </div>
-
-              <div className="profile-card">
-                <i className="fa-solid fa-bag-shopping"></i>
-                <h3>{t("orders")}</h3>
-                <p>
-                  {ordersCount === null || ordersCount === 0
-                    ? t("noOrdersShort")
-                    : t("ordersCount", { count: ordersCount })}
-                </p>
-                <Link to="/orders">{t("ordersHistory")}</Link>
-              </div>
-
-              <div className="profile-card">
-                <i className="fa-solid fa-circle-half-stroke"></i>
-                <h3>{t("theme")}</h3>
-                <p>{t("lightDark")}</p>
-                <button className="btn-outline" id="profileTheme" onClick={toggleTheme}>{t("switchAction")}</button>
-              </div>
-
-              <div className="profile-card">
-                <i className="fa-solid fa-store"></i>
-                <h3>{t("myProducts")}</h3>
-                <p>{t("itemsCount", { count: productsCount })}</p>
-                <a
-                  href="/"
-                  onClick={event => {
-                    event.preventDefault();
-                    sellerSection.current.scrollIntoView({ behavior: "smooth" });
-                  }}
-                >
-                  {t("manage")}
-                </a>
-              </div>
+            <div className="profile-tabs">
+              <button
+                type="button"
+                className={`profile-tab-btn ${activeTab === "overview" ? "active" : ""}`}
+                onClick={() => {
+                  setActiveTab("overview");
+                  setSearchParams({});
+                }}
+              >
+                <i className="fa-solid fa-gauge-high"></i>
+                <span>{t("tabOverview")}</span>
+              </button>
+              <button
+                type="button"
+                className={`profile-tab-btn ${activeTab === "settings" ? "active" : ""}`}
+                onClick={() => {
+                  setActiveTab("settings");
+                  setSearchParams({ tab: "settings" });
+                }}
+              >
+                <i className="fa-solid fa-gear"></i>
+                <span>{t("settingsTitle")}</span>
+              </button>
             </div>
 
-            <div className="profile-seller-section" ref={sellerSection}>
-              <div className="seller-section-header">
-                <div>
-                  <h2>{t("sellerCabinet")}</h2>
-                  <p className="seller-desc">{t("sellerCabinetDesc")}</p>
-                </div>
-                <button type="button" className="btn btn-primary" onClick={() => setModalOpen(true)}>
-                  <i className="fa-solid fa-plus"></i> <span>{t("addNewProduct")}</span>
-                </button>
-              </div>
+            {activeTab === "settings" ? (
+              <SettingsView />
+            ) : (
+              <>
+                <div className="profile-cards">
+                  <div className="profile-card">
+                    <i className="fa-solid fa-cart-shopping"></i>
+                    <h3>{t("cart")}</h3>
+                    <p>{t("itemsCount", { count: cart.length })}</p>
+                    <Link to="/cart">{t("goTo")}</Link>
+                  </div>
 
-              <div className="seller-products-container">
-                {myProducts === null && <div className="seller-loading">{t("loading")}</div>}
+                  <div className="profile-card">
+                    <i className="fa-solid fa-heart"></i>
+                    <h3>{t("favoritesTitle")}</h3>
+                    <p>{t("itemsCount", { count: favorites.length })}</p>
+                    <Link to="/favorites">{t("goTo")}</Link>
+                  </div>
 
-                {myProducts && myProducts.length === 0 && (
-                  <div className="seller-empty-state">
-                    <i className="fa-solid fa-box-open"></i>
-                    <p>{t("noSellerProducts")}</p>
-                    <button
-                      type="button"
-                      className="btn btn-outline"
-                      style={{ marginTop: "15px" }}
-                      onClick={() => setModalOpen(true)}
+                  <div className="profile-card">
+                    <i className="fa-solid fa-bag-shopping"></i>
+                    <h3>{t("orders")}</h3>
+                    <p>
+                      {ordersCount === null || ordersCount === 0
+                        ? t("noOrdersShort")
+                        : t("ordersCount", { count: ordersCount })}
+                    </p>
+                    <Link to="/orders">{t("ordersHistory")}</Link>
+                  </div>
+
+                  <div className="profile-card">
+                    <i className="fa-solid fa-circle-half-stroke"></i>
+                    <h3>{t("theme")}</h3>
+                    <p>{t("lightDark")}</p>
+                    <button className="btn-outline" id="profileTheme" onClick={toggleTheme}>{t("switchAction")}</button>
+                  </div>
+
+                  <div className="profile-card">
+                    <i className="fa-solid fa-store"></i>
+                    <h3>{t("myProducts")}</h3>
+                    <p>{t("itemsCount", { count: productsCount })}</p>
+                    <a
+                      href="/"
+                      onClick={event => {
+                        event.preventDefault();
+                        sellerSection.current.scrollIntoView({ behavior: "smooth" });
+                      }}
                     >
-                      <i className="fa-solid fa-plus"></i> {t("addNewProduct")}
+                      {t("manage")}
+                    </a>
+                  </div>
+
+                  <div className="profile-card">
+                    <i className="fa-solid fa-gear"></i>
+                    <h3>{t("settingsTitle")}</h3>
+                    <p>{t("settingsDesc")}</p>
+                    <a
+                      href="#settings"
+                      onClick={event => {
+                        event.preventDefault();
+                        setActiveTab("settings");
+                        setSearchParams({ tab: "settings" });
+                      }}
+                    >
+                      {t("settingsAction")}
+                    </a>
+                  </div>
+                </div>
+
+                <div className="profile-seller-section" ref={sellerSection}>
+                  <div className="seller-section-header">
+                    <div>
+                      <h2>{t("sellerCabinet")}</h2>
+                      <p className="seller-desc">{t("sellerCabinetDesc")}</p>
+                    </div>
+                    <button type="button" className="btn btn-primary" onClick={() => setModalOpen(true)}>
+                      <i className="fa-solid fa-plus"></i> <span>{t("addNewProduct")}</span>
                     </button>
                   </div>
-                )}
 
-                {myProducts && myProducts.map(product => (
-                  <div className="seller-product-card" key={product.id}>
-                    <img
-                      src={product.thumbnail || "images/banner.png"}
-                      alt={product.title}
-                      className="seller-product-img"
-                      onError={event => {
-                        event.currentTarget.src = "images/banner.png";
-                      }}
-                    />
-                    <div className="seller-product-body">
-                      <div className="product-seller-badge">
-                        <i className="fa-solid fa-store"></i> {product.seller || user.name}
-                      </div>
-                      <div className="seller-product-cat">{product.category}</div>
-                      <h4 className="seller-product-title" title={product.title}>{product.title}</h4>
-                      <div className="seller-product-meta">
-                        <div className="seller-product-price">{product.price}$</div>
-                        <div style={{ fontSize: "13px", color: "var(--gray)" }}>
-                          <i className="fa-solid fa-warehouse"></i> {product.stock} шт.
-                        </div>
-                      </div>
-                      <div className="seller-product-actions">
-                        <Link to={`/product/${product.id}`} target="_blank" className="btn btn-outline btn-sm">
-                          <i className="fa-regular fa-eye"></i> Переглянути
-                        </Link>
+                  <div className="seller-products-container">
+                    {myProducts === null && <div className="seller-loading">{t("loading")}</div>}
+
+                    {myProducts && myProducts.length === 0 && (
+                      <div className="seller-empty-state">
+                        <i className="fa-solid fa-box-open"></i>
+                        <p>{t("noSellerProducts")}</p>
                         <button
                           type="button"
-                          className="btn-sm seller-btn-delete"
-                          title="Видалити товар"
-                          onClick={() => onDelete(product.id)}
+                          className="btn btn-outline"
+                          style={{ marginTop: "15px" }}
+                          onClick={() => setModalOpen(true)}
                         >
-                          <i className="fa-regular fa-trash-can"></i>
+                          <i className="fa-solid fa-plus"></i> {t("addNewProduct")}
                         </button>
                       </div>
-                    </div>
+                    )}
+
+                    {myProducts && myProducts.map(product => (
+                      <div className="seller-product-card" key={product.id}>
+                        <img
+                          src={product.thumbnail || "images/banner.png"}
+                          alt={product.title}
+                          className="seller-product-img"
+                          onError={event => {
+                            event.currentTarget.src = "images/banner.png";
+                          }}
+                        />
+                        <div className="seller-product-body">
+                          <div className="product-seller-badge">
+                            <i className="fa-solid fa-store"></i> {product.seller || user.name}
+                          </div>
+                          <div className="seller-product-cat">{product.category}</div>
+                          <h4 className="seller-product-title" title={product.title}>{product.title}</h4>
+                          <div className="seller-product-meta">
+                            <div className="seller-product-price">{product.price}$</div>
+                            <div style={{ fontSize: "13px", color: "var(--gray)" }}>
+                              <i className="fa-solid fa-warehouse"></i> {product.stock} шт.
+                            </div>
+                          </div>
+                          <div className="seller-product-actions">
+                            <Link to={`/product/${product.id}`} target="_blank" className="btn btn-outline btn-sm">
+                              <i className="fa-regular fa-eye"></i> Переглянути
+                            </Link>
+                            <button
+                              type="button"
+                              className="btn-sm seller-btn-delete"
+                              title="Видалити товар"
+                              onClick={() => onDelete(product.id)}
+                            >
+                              <i className="fa-regular fa-trash-can"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              </>
+            )}
           </section>
         </div>
       </div>

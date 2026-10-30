@@ -18,6 +18,7 @@ export default function Catalog() {
   const [search, setSearch] = useState(urlQuery);
   const [sort, setSort] = useState("default");
   const [page, setPage] = useState(1);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     getProducts(200).then(setProducts);
@@ -28,6 +29,20 @@ export default function Catalog() {
     setSearch(urlQuery);
     setPage(1);
   }, [urlQuery]);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = event => {
+        if (event.key === "Escape") setDrawerOpen(false);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [drawerOpen]);
 
   const filtered = useMemo(() => {
     let list = [...products];
@@ -80,6 +95,20 @@ export default function Catalog() {
         <h1 className="title">{t("catalogTitle")}</h1>
 
         <div className="catalog-top">
+          <button
+            type="button"
+            className="catalog-drawer-trigger"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <i className="fa-solid fa-layer-group"></i>
+            <span>
+              {category === "all"
+                ? t("allCategories")
+                : categories.find(item => item.slug === category)?.name || category}
+            </span>
+            <i className="fa-solid fa-chevron-right" style={{ fontSize: "12px", marginLeft: "auto" }}></i>
+          </button>
+
           <input
             type="text"
             className="catalog-search"
@@ -107,16 +136,33 @@ export default function Catalog() {
         </div>
 
         <div className="catalog-layout">
-          <aside className="catalog-sidebar">
-            <h3>{t("categories")}</h3>
+          <div
+            className={`catalog-drawer-backdrop${drawerOpen ? " active" : ""}`}
+            onClick={() => setDrawerOpen(false)}
+          />
+
+          <aside className={`catalog-sidebar${drawerOpen ? " active" : ""}`}>
+            <div className="catalog-drawer-header">
+              <h3>{t("categories")}</h3>
+              <button
+                type="button"
+                className="catalog-drawer-close"
+                onClick={() => setDrawerOpen(false)}
+                aria-label={t("close")}
+              >
+                &times;
+              </button>
+            </div>
             <div className="categories-list">
               <div
                 className={`category-filter${category === "all" ? " active" : ""}`}
                 onClick={() => {
                   setCategory("all");
                   setPage(1);
+                  setDrawerOpen(false);
                 }}
               >
+                <i className="fa-solid fa-boxes-stacked" style={{ marginRight: "8px" }}></i>
                 {t("allProducts")}
               </div>
               {categories.map(item => (
@@ -126,6 +172,7 @@ export default function Catalog() {
                   onClick={() => {
                     setCategory(item.slug);
                     setPage(1);
+                    setDrawerOpen(false);
                   }}
                 >
                   {item.name}

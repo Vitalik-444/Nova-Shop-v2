@@ -13,8 +13,8 @@ const transporter = nodemailer.createTransport({
 
 async function sendMail(to, name, subject, html) {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        console.warn('SMTP credentials not configured, skipping email send to', to);
-        return;
+        console.warn('SMTP credentials not configured, skipping real email send to', to);
+        return { success: true, simulated: true, to, message: 'SMTP credentials not configured. Email logged to server console.' };
     }
 
     const mailOptions = {
@@ -24,7 +24,8 @@ async function sendMail(to, name, subject, html) {
         html: html
     };
 
-    return transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, simulated: false, to, messageId: info.messageId };
 }
 
-module.exports = { sendMail };
+module.exports = { sendMail, transporter };

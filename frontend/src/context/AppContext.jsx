@@ -107,10 +107,30 @@ export function AppProvider({ children }) {
     };
   }, [applyUser, loadUserData]);
 
+  const [themeEffects, setThemeEffects] = useState(() => getStorage("themeEffects", true));
+  const [blurPreviews, setBlurPreviews] = useState(() => getStorage("blurPreviews", false));
+
   useEffect(() => {
-    document.body.classList.toggle("dark", theme === "dark");
+    let activeTheme = theme;
+    if (theme === "system") {
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      activeTheme = prefersDark ? "dark" : "light";
+    }
+    const isLight = activeTheme === "light" || activeTheme === "sakura" || activeTheme === "lavender" || activeTheme === "desert" || activeTheme === "leaves";
+    document.body.classList.toggle("dark", !isLight);
+    document.body.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
     setStorage("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    setStorage("themeEffects", themeEffects);
+  }, [themeEffects]);
+
+  useEffect(() => {
+    setStorage("blurPreviews", blurPreviews);
+    document.body.classList.toggle("blur-previews", blurPreviews);
+  }, [blurPreviews]);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -221,14 +241,24 @@ export function AppProvider({ children }) {
     removeStorage("favorites");
   }, [applyUser, setCartLocal, setFavoritesLocal]);
 
+  const updateUser = useCallback(updated => {
+    applyUser(updated);
+  }, [applyUser]);
+
   const value = useMemo(() => ({
     language,
     setLanguage,
     t,
     formatPrice,
     theme,
+    setTheme,
     toggleTheme,
+    themeEffects,
+    setThemeEffects,
+    blurPreviews,
+    setBlurPreviews,
     user,
+    updateUser,
     ready,
     loaderVisible: splash || busy > 0,
     withLoader,
@@ -246,7 +276,7 @@ export function AppProvider({ children }) {
     register,
     logout
   }), [
-    language, setLanguage, t, formatPrice, theme, toggleTheme, user, ready, splash, busy,
+    language, setLanguage, t, formatPrice, theme, setTheme, toggleTheme, themeEffects, blurPreviews, user, updateUser, ready, splash, busy,
     withLoader, toast, showToast, cart, addToCart, changeQuantity, removeFromCart, clearCart,
     favorites, isFavorite, toggleFavorite, login, register, logout
   ]);

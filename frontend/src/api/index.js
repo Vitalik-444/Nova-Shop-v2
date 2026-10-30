@@ -109,6 +109,22 @@ export function logout() {
   return safe(() => request(`${AUTH_URL}?action=logout`), null);
 }
 
+export function updateProfile(data) {
+  return safe(() => send(`${AUTH_URL}?action=update-profile`, data), NETWORK_ERROR);
+}
+
+export function updateSettings(settings) {
+  return safe(() => send(`${AUTH_URL}?action=update-settings`, { settings }), NETWORK_ERROR);
+}
+
+export function changePassword(oldPassword, newPassword) {
+  return safe(() => send(`${AUTH_URL}?action=change-password`, { oldPassword, newPassword }), NETWORK_ERROR);
+}
+
+export function sendTestEmail() {
+  return safe(() => send(`${AUTH_URL}?action=send-test-email`, {}), NETWORK_ERROR);
+}
+
 export function fetchServerCart() {
   return safe(async () => {
     const data = await request(`${CART_URL}?action=list`);

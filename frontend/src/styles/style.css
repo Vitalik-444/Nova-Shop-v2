@@ -1410,20 +1410,33 @@ button.action-btn {
 
 }
 
+.catalog-drawer-trigger {
+    display: none;
+}
+
+.catalog-drawer-backdrop {
+    display: none;
+}
+
+.catalog-drawer-close {
+    display: none;
+}
+
+.catalog-drawer-header {
+    margin-bottom: 20px;
+}
+
+.catalog-drawer-header h3 {
+    margin: 0;
+}
+
 .catalog-sidebar{
-
     background:var(--surface);
-
     padding:25px;
-
     border-radius:16px;
-
     box-shadow:var(--shadow);
-
     height:max-content;
-
     min-width:0;
-
 }
 
 .catalog-sidebar h3{
@@ -2478,3 +2491,177 @@ select.input{
     border-radius: 6px;
     margin-bottom: 8px;
 }
+
+/* ---------- Налаштування (Settings Modal & Tabs) ---------- */
+.settings-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    padding-bottom: 4px;
+    overflow-x: auto;
+}
+
+.settings-tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.settings-tab-btn:hover {
+    color: var(--text);
+}
+
+.settings-tab-btn.active {
+    color: var(--green);
+    border-bottom-color: var(--green);
+}
+
+.settings-group {
+    margin-bottom: 20px;
+}
+
+.settings-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: var(--text);
+    user-select: none;
+    transition: 0.2s;
+}
+
+.settings-checkbox-label:hover {
+    border-color: var(--green);
+}
+
+.settings-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--green);
+    cursor: pointer;
+}
+
+.settings-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.settings-test-email-box {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--background);
+    border: 1px dashed var(--border);
+}
+
+.settings-test-email-box p {
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 12px;
+}
+
+/* ---------- Profile Tabs & Settings View ---------- */
+.profile-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+}
+
+.profile-tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.25s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-tab-btn:hover {
+    color: var(--text);
+}
+
+.profile-tab-btn.active {
+    color: var(--green);
+    border-bottom-color: var(--green);
+}
+
+.settings-panel {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: var(--shadow);
+}
+
+.settings-form {
+    margin-top: 15px;
+}
+
+.settings-field {
+    margin-bottom: 16px;
+}
+
+.settings-field label {
+    display: block;
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.settings-field input,
+.settings-field textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.settings-field input:focus,
+.settings-field textarea:focus {
+    outline: none;
+    border-color: var(--green);
+}
+
+.settings-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 25px;
+    gap: 12px;
+}
+

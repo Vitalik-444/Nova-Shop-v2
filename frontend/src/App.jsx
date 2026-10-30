@@ -26,6 +26,7 @@ export default function App() {
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="profile" element={<RequireAuth><Profile /></RequireAuth>} />
+        <Route path="settings" element={<RequireAuth><Profile defaultTab="settings" /></RequireAuth>} />
         <Route path="orders" element={<RequireAuth><Orders /></RequireAuth>} />
         <Route path="admin" element={<Admin />} />
         <Route path="*" element={<Navigate to="/" replace />} />

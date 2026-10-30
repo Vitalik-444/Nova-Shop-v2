@@ -10,6 +10,7 @@
     "db:seed": "node scripts/seed.js",
     "db:export-seed": "node scripts/export-seed.js",
     "db:smoke": "node scripts/smoke.js",
+    "test:mail": "node scripts/test-mail.js",
     "frontend:dev": "npm --prefix frontend run dev",
     "frontend:build": "npm --prefix frontend run build"
   },
