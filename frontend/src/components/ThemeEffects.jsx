@@ -107,6 +107,15 @@ function spawn(kind, width, height, initial) {
     base.alpha = base.variant === 0 ? rand(0.55, 0.95) : rand(0.8, 1);
     base.hue = Math.random() < 0.5 ? 0 : 1;
     base.spin = rand(-0.025, 0.025);
+  } else if (kind === "ocean") {
+    base.size = rand(3, 13);
+    base.speed = -rand(0.5, 1.6);
+    base.drift = rand(-0.25, 0.25);
+    base.sway = rand(15, 38);
+    base.swayPhase = rand(0, Math.PI * 2);
+    base.alpha = rand(0.35, 0.85);
+    base.variant = Math.random() < 0.25 ? 1 : 0;
+    base.y = initial ? rand(0, height) : height + rand(10, 50);
   } else {
     // halloween: embers rise, bats cross the screen
     const bat = Math.random() < 0.18;
@@ -426,6 +435,35 @@ function drawEmber(ctx, p) {
   ctx.fill();
 }
 
+function drawBubble(ctx, p) {
+  const s = p.size;
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.globalAlpha = p.alpha;
+
+  ctx.beginPath();
+  ctx.arc(0, 0, s, 0, Math.PI * 2);
+  ctx.fillStyle = p.variant === 1 ? "rgba(6, 182, 212, 0.16)" : "rgba(56, 189, 248, 0.1)";
+  ctx.fill();
+  ctx.strokeStyle = p.variant === 1 ? "rgba(6, 182, 212, 0.75)" : "rgba(125, 211, 252, 0.65)";
+  ctx.lineWidth = Math.max(0.8, s * 0.1);
+  ctx.stroke();
+
+  // Specular gleam (top left)
+  ctx.beginPath();
+  ctx.arc(-s * 0.35, -s * 0.35, Math.max(0.8, s * 0.22), 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * 0.9})`;
+  ctx.fill();
+
+  // Subtle ambient lower rim
+  ctx.beginPath();
+  ctx.arc(s * 0.28, s * 0.28, Math.max(0.5, s * 0.12), 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(186, 230, 253, ${p.alpha * 0.45})`;
+  ctx.fill();
+
+  ctx.restore();
+}
+
 export default function ThemeEffects({ theme, enabled = true }) {
   const canvasRef = useRef(null);
   const baseTheme = (theme || "").replace(/-light$|-dark$/, "");
@@ -438,8 +476,10 @@ export default function ThemeEffects({ theme, enabled = true }) {
       baseTheme === "snow" ||
       baseTheme === "desert" ||
       baseTheme === "love" ||
-      baseTheme === "leaves"
-    ? baseTheme
+      baseTheme === "leaves" ||
+      baseTheme === "forest" ||
+      baseTheme === "ocean"
+    ? baseTheme === "forest" ? "leaves" : baseTheme
     : null;
 
   useEffect(() => {
@@ -476,6 +516,8 @@ export default function ThemeEffects({ theme, enabled = true }) {
           ? Math.round(target * 0.8)
           : kind === "newyear"
           ? Math.round(target * 1.2)
+          : kind === "ocean"
+          ? Math.round(target * 1.5)
           : target;
       while (particles.length < count) particles.push(spawn(kind, width, height, true));
       particles.length = Math.min(particles.length, count);
@@ -512,6 +554,7 @@ export default function ThemeEffects({ theme, enabled = true }) {
         else if (kind === "love") drawHeart(ctx, p);
         else if (kind === "snow") drawSnow(ctx, p);
         else if (kind === "newyear") drawCandy(ctx, p);
+        else if (kind === "ocean") drawBubble(ctx, p);
         else if (isBat) drawBat(ctx, p);
         else drawEmber(ctx, p);
 
@@ -549,6 +592,7 @@ export default function ThemeEffects({ theme, enabled = true }) {
         else if (kind === "love") drawHeart(ctx, p);
         else if (kind === "snow") drawSnow(ctx, p);
         else if (kind === "newyear") drawCandy(ctx, p);
+        else if (kind === "ocean") drawBubble(ctx, p);
         else if (p.variant !== 100) drawEmber(ctx, p);
       }
     };
