@@ -1378,6 +1378,143 @@ button.action-btn {
 
 }
 
+.catalog-ticker {
+    flex: 1;
+    min-width: 0;
+    height: 50px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.catalog-ticker-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 16px;
+    height: 100%;
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-hover) 100%);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    box-shadow: 2px 0 8px rgba(0, 160, 70, 0.18);
+    z-index: 2;
+}
+
+.ticker-pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: tickerPulse 1.8s infinite;
+}
+
+@keyframes tickerPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}
+
+.catalog-ticker-track-wrap {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+}
+
+.catalog-ticker-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 36px;
+    white-space: nowrap;
+    animation: catalogTickerScroll 32s linear infinite;
+    will-change: transform;
+}
+
+.catalog-ticker:hover .catalog-ticker-track {
+    animation-play-state: paused;
+}
+
+@keyframes catalogTickerScroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.catalog-ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.catalog-ticker-item i {
+    color: var(--green);
+    font-size: 15px;
+}
+
+.catalog-ticker-sep {
+    color: var(--border);
+    font-size: 14px;
+    margin-left: 12px;
+}
+
+.catalog-search-query-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border: 1px dashed var(--green);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.catalog-search-clear-btn {
+    border: none;
+    background: transparent;
+    color: var(--gray);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color .2s;
+}
+
+.catalog-search-clear-btn:hover {
+    color: #e53935;
+}
+
 .catalog-sort{
 
     width:220px;

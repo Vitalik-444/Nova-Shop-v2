@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { getCategories, getProducts } from "../api";
 import ProductCard from "../components/ProductCard";
+import CatalogTicker from "../components/CatalogTicker";
 
 const PAGE_SIZE = 12;
 const MAX_PAGE_BUTTONS = 7;
@@ -131,16 +132,7 @@ export default function Catalog() {
             <i className="fa-solid fa-chevron-right" style={{ fontSize: "12px", marginLeft: "auto" }}></i>
           </button>
 
-          <input
-            type="text"
-            className="catalog-search"
-            placeholder={t("searchProducts")}
-            value={search}
-            onChange={event => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-          />
+          <CatalogTicker />
           <select
             className="catalog-sort"
             value={sort}
@@ -158,6 +150,25 @@ export default function Catalog() {
             <option value="newest">{t("sortNewest")}</option>
           </select>
         </div>
+
+        {search && (
+          <div className="catalog-search-query-bar">
+            <span>
+              {t("searchResultsFor")}: <strong>"{search}"</strong>
+            </span>
+            <button
+              type="button"
+              className="catalog-search-clear-btn"
+              onClick={() => {
+                setSearch("");
+                setPage(1);
+              }}
+              title={t("resetSearch")}
+            >
+              <i className="fa-solid fa-xmark"></i> {t("resetSearch")}
+            </button>
+          </div>
+        )}
 
         <div className="catalog-layout">
           <div

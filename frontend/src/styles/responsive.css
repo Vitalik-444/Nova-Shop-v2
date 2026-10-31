@@ -44,6 +44,21 @@
         gap: 12px;
     }
 
+    .catalog-ticker {
+        width: 100%;
+        height: 44px;
+    }
+
+    .catalog-ticker-badge {
+        padding: 0 10px;
+        font-size: 11px;
+    }
+
+    .catalog-ticker-item {
+        font-size: 13px;
+        gap: 6px;
+    }
+
     .catalog-sort {
         width: 100%;
     }
