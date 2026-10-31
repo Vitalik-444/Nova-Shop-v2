@@ -3665,6 +3665,235 @@ html[data-theme="lavender-dark"] {
   --shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
 }
 
+/* ==========================================================================
+   THEME ATMOSPHERE & COMPONENT ACCENTS (from noir-adult)
+   ========================================================================== */
+
+/* Theme scrollbars */
+html[data-theme="midnight"] ::-webkit-scrollbar-thumb,
+html[data-theme="midnight-light"] ::-webkit-scrollbar-thumb { background: #2563eb; }
+
+html[data-theme="forest"] ::-webkit-scrollbar-thumb,
+html[data-theme="forest-light"] ::-webkit-scrollbar-thumb { background: #16a34a; }
+
+html[data-theme="crimson"] ::-webkit-scrollbar-thumb,
+html[data-theme="crimson-light"] ::-webkit-scrollbar-thumb { background: #dc2626; }
+
+html[data-theme="violet"] ::-webkit-scrollbar-thumb,
+html[data-theme="violet-light"] ::-webkit-scrollbar-thumb { background: #9333ea; }
+
+html[data-theme="rose"] ::-webkit-scrollbar-thumb,
+html[data-theme="rose-light"] ::-webkit-scrollbar-thumb { background: #e11d48; }
+
+html[data-theme="amoled"] ::-webkit-scrollbar-thumb { background: #222222; }
+html[data-theme="amoled-light"] ::-webkit-scrollbar-thumb { background: #333333; }
+
+html[data-theme="sakura"] ::-webkit-scrollbar-thumb,
+html[data-theme="sakura-dark"] ::-webkit-scrollbar-thumb { background: #e8527f; }
+
+html[data-theme="autumn"] ::-webkit-scrollbar-thumb,
+html[data-theme="autumn-light"] ::-webkit-scrollbar-thumb { background: #d97706; }
+
+html[data-theme="halloween"] ::-webkit-scrollbar-thumb,
+html[data-theme="halloween-light"] ::-webkit-scrollbar-thumb { background: #ea580c; }
+
+html[data-theme="ocean"] ::-webkit-scrollbar-thumb,
+html[data-theme="ocean-light"] ::-webkit-scrollbar-thumb { background: #0891b2; }
+
+html[data-theme="gold"] ::-webkit-scrollbar-thumb,
+html[data-theme="gold-light"] ::-webkit-scrollbar-thumb { background: #ca8a04; }
+
+html[data-theme="cyber"] ::-webkit-scrollbar-thumb,
+html[data-theme="cyber-light"] ::-webkit-scrollbar-thumb { background: #00e5ff; }
+
+html[data-theme="lavender"] ::-webkit-scrollbar-thumb,
+html[data-theme="lavender-dark"] ::-webkit-scrollbar-thumb { background: #7c5cdb; }
+
+html[data-theme="newyear"] ::-webkit-scrollbar-thumb,
+html[data-theme="newyear-light"] ::-webkit-scrollbar-thumb {
+  background: repeating-linear-gradient(45deg, #ff2d4f 0 6px, #ffffff 6px 12px);
+}
+
+html[data-theme="snow"] ::-webkit-scrollbar-thumb,
+html[data-theme="snow-light"] ::-webkit-scrollbar-thumb { background: #0284c7; }
+
+html[data-theme="desert"] ::-webkit-scrollbar-thumb,
+html[data-theme="desert-dark"] ::-webkit-scrollbar-thumb { background: #c8571e; }
+
+html[data-theme="love"] ::-webkit-scrollbar-thumb,
+html[data-theme="love-light"] ::-webkit-scrollbar-thumb { background: #ff3d74; }
+
+html[data-theme="leaves"] ::-webkit-scrollbar-thumb,
+html[data-theme="leaves-dark"] ::-webkit-scrollbar-thumb { background: #3f9a2b; }
+
+/* Atmospheric Theme Ambient Backgrounds */
+html[data-theme="cyber"] body {
+  background-image:
+    radial-gradient(ellipse 55% 35% at 92% 0%, rgba(255, 43, 214, 0.22), transparent 70%),
+    radial-gradient(ellipse 45% 30% at 0% 20%, rgba(0, 229, 255, 0.14), transparent 70%);
+  background-attachment: fixed;
+}
+html[data-theme="cyber-light"] body {
+  background-image:
+    radial-gradient(ellipse 55% 35% at 92% 0%, rgba(14, 165, 233, 0.15), transparent 70%),
+    radial-gradient(ellipse 45% 30% at 0% 20%, rgba(168, 85, 247, 0.12), transparent 70%);
+  background-attachment: fixed;
+}
+
+html[data-theme="halloween"] body {
+  background-image:
+    radial-gradient(ellipse 55% 35% at 90% 0%, rgba(124, 58, 237, 0.28), transparent 70%),
+    radial-gradient(ellipse 45% 30% at 0% 18%, rgba(255, 122, 0, 0.15), transparent 70%);
+  background-attachment: fixed;
+}
+html[data-theme="halloween-light"] body {
+  background-image:
+    radial-gradient(ellipse 55% 35% at 90% 0%, rgba(168, 85, 247, 0.15), transparent 70%),
+    radial-gradient(ellipse 45% 30% at 0% 18%, rgba(249, 115, 22, 0.15), transparent 70%);
+  background-attachment: fixed;
+}
+
+html[data-theme="autumn"] body {
+  background-image: radial-gradient(ellipse 70% 40% at 50% -10%, rgba(196, 80, 27, 0.28), transparent 70%);
+  background-attachment: fixed;
+}
+html[data-theme="autumn-light"] body {
+  background-image: radial-gradient(ellipse 70% 40% at 50% -10%, rgba(245, 158, 11, 0.18), transparent 70%);
+  background-attachment: fixed;
+}
+
+html[data-theme="newyear"] body {
+  background-image:
+    radial-gradient(ellipse 60% 35% at 85% 0%, rgba(255, 45, 79, 0.26), transparent 70%),
+    radial-gradient(ellipse 45% 30% at 0% 20%, rgba(255, 255, 255, 0.05), transparent 70%);
+  background-attachment: fixed;
+}
+html[data-theme="newyear-light"] body {
+  background-image:
+    radial-gradient(ellipse 60% 35% at 85% 0%, rgba(244, 63, 94, 0.16), transparent 70%),
+    radial-gradient(ellipse 45% 30% at 0% 20%, rgba(251, 191, 36, 0.12), transparent 70%);
+  background-attachment: fixed;
+}
+
+html[data-theme="snow"] body {
+  background-image: radial-gradient(ellipse 70% 40% at 50% -10%, rgba(125, 211, 252, 0.22), transparent 70%);
+  background-attachment: fixed;
+}
+html[data-theme="snow-light"] body {
+  background-image: radial-gradient(ellipse 70% 40% at 50% -10%, rgba(186, 230, 253, 0.45), transparent 70%);
+  background-attachment: fixed;
+}
+
+html[data-theme="ocean"] body {
+  background-image: radial-gradient(ellipse 60% 40% at 80% -5%, rgba(6, 182, 212, 0.22), transparent 70%);
+  background-attachment: fixed;
+}
+html[data-theme="ocean-light"] body {
+  background-image: radial-gradient(ellipse 60% 40% at 80% -5%, rgba(6, 182, 212, 0.16), transparent 70%);
+  background-attachment: fixed;
+}
+
+html[data-theme="gold"] body {
+  background-image: radial-gradient(ellipse 65% 38% at 50% -10%, rgba(212, 167, 58, 0.18), transparent 70%);
+  background-attachment: fixed;
+}
+html[data-theme="gold-light"] body {
+  background-image: radial-gradient(ellipse 65% 38% at 50% -10%, rgba(234, 179, 8, 0.16), transparent 70%);
+  background-attachment: fixed;
+}
+
+html[data-theme="love"] body {
+  background-image: radial-gradient(ellipse 60% 35% at 90% 0%, rgba(255, 61, 116, 0.28), transparent 70%);
+  background-attachment: fixed;
+}
+html[data-theme="love-light"] body {
+  background-image: radial-gradient(ellipse 60% 35% at 90% 0%, rgba(244, 63, 94, 0.16), transparent 70%);
+  background-attachment: fixed;
+}
+
+html[data-theme="sakura"] body,
+html[data-theme="sakura-dark"] body {
+  background-image: radial-gradient(ellipse 65% 35% at 85% -5%, rgba(244, 114, 182, 0.25), transparent 65%);
+  background-attachment: fixed;
+}
+
+html[data-theme="desert"] body,
+html[data-theme="desert-dark"] body {
+  background-image: radial-gradient(ellipse 70% 38% at 85% -8%, rgba(249, 115, 22, 0.22), transparent 65%);
+  background-attachment: fixed;
+}
+
+html[data-theme="leaves"] body,
+html[data-theme="leaves-dark"] body {
+  background-image: radial-gradient(ellipse 70% 38% at 10% -8%, rgba(74, 222, 128, 0.22), transparent 65%);
+  background-attachment: fixed;
+}
+
+html[data-theme="lavender"] body,
+html[data-theme="lavender-dark"] body {
+  background-image:
+    radial-gradient(ellipse 60% 40% at 85% 0%, rgba(167, 139, 250, 0.25), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 5% 30%, rgba(196, 181, 253, 0.2), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* Theme glowing headers and logos */
+html[data-theme="cyber"] .logo,
+html[data-theme="cyber-light"] .logo {
+  text-shadow: 0 0 16px rgba(0, 229, 255, 0.55);
+}
+html[data-theme="cyber"] .header {
+  box-shadow: 0 1px 0 rgba(0, 229, 255, 0.25), 0 8px 30px rgba(255, 43, 214, 0.12);
+}
+
+html[data-theme="halloween"] .logo {
+  text-shadow: 0 0 16px rgba(255, 122, 0, 0.5);
+}
+html[data-theme="halloween"] .header {
+  box-shadow: 0 1px 0 rgba(168, 85, 247, 0.25), 0 8px 30px rgba(255, 122, 0, 0.12);
+}
+
+html[data-theme="gold"] .logo {
+  text-shadow: 0 0 16px rgba(212, 167, 58, 0.45);
+}
+
+html[data-theme="love"] .logo {
+  text-shadow: 0 0 16px rgba(255, 61, 116, 0.5);
+}
+
+html[data-theme="snow"] .header {
+  box-shadow: 0 1px 0 rgba(186, 230, 253, 0.25), 0 8px 30px rgba(125, 211, 252, 0.12);
+}
+
+/* New Year Festive Candy-Cane Header */
+@keyframes candy-slide {
+  from { background-position: 0 0; }
+  to { background-position: 28.28px 0; }
+}
+
+html[data-theme="newyear"] .header::after,
+html[data-theme="newyear-light"] .header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: repeating-linear-gradient(135deg, #ff2d4f 0 10px, #ffffff 10px 20px);
+  background-size: 28.28px 100%;
+  animation: candy-slide 1.2s linear infinite;
+  pointer-events: none;
+}
+
+/* Card hover glow with active theme accent */
+.product-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.product-card:hover {
+  border-color: var(--line-strong, var(--accent)) !important;
+  box-shadow: 0 12px 30px rgba(var(--accent-rgb, 0, 160, 70), 0.16) !important;
+}
+
 /* Theme particle effects canvas */
 .theme-effects {
     position: fixed;

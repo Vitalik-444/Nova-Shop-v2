@@ -5,15 +5,23 @@ import { getStorage, setStorage, removeStorage } from "../utils/storage";
 
 const AppContext = createContext(null);
 
-export const THEMES = [
-  "dark", "light", "system", "midnight", "forest", "crimson",
+export const THEME_FAMILIES = [
+  "default", "system", "midnight", "forest", "crimson",
   "violet", "rose", "amoled", "sakura", "autumn", "halloween",
   "newyear", "snow", "desert", "love", "leaves", "ocean",
   "gold", "cyber", "lavender"
 ];
 
+export const THEMES = [
+  "default", "system", "midnight", "forest", "crimson",
+  "violet", "rose", "amoled", "sakura", "autumn", "halloween",
+  "newyear", "snow", "desert", "love", "leaves", "ocean",
+  "gold", "cyber", "lavender", "dark", "light"
+];
+
 export const THEME_COLORS = {
   // Dark variants
+  default: { bg: "#121212", accent: "#00A046" },
   dark: { bg: "#121212", accent: "#00A046" },
   midnight: { bg: "#060a14", accent: "#3b82f6" },
   forest: { bg: "#060d09", accent: "#22c55e" },
@@ -35,6 +43,7 @@ export const THEME_COLORS = {
   "lavender-dark": { bg: "#0e0a19", accent: "#a78bfa" },
 
   // Light variants
+  "default-light": { bg: "#f5f5f5", accent: "#00A046" },
   light: { bg: "#f5f5f5", accent: "#00A046" },
   "midnight-light": { bg: "#f0f4fc", accent: "#2563eb" },
   "forest-light": { bg: "#f0f9f3", accent: "#16a34a" },
@@ -70,8 +79,8 @@ export function isDarkTheme(th) {
 }
 
 export function getThemeFamily(th) {
-  if (th === "system") return "system";
-  if (th === "light" || th === "dark") return "default";
+  if (!th || th === "system") return "system";
+  if (th === "light" || th === "dark" || th === "default") return "default";
   return th.replace(/-light$|-dark$/, "");
 }
 

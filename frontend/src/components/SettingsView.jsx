@@ -1,18 +1,27 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useApp, THEMES, THEME_COLORS } from "../context/AppContext";
+import {
+  useApp,
+  THEME_FAMILIES,
+  THEME_COLORS,
+  isDarkTheme,
+  getThemeFamily,
+  getThemeVariant
+} from "../context/AppContext";
 import { updateProfile, updateSettings, changePassword, sendTestEmail } from "../api";
 
-function swatchStyle(th) {
-  if (th === "system") {
+function swatchStyle(family, wantDark) {
+  if (family === "system") {
     return {
       "--sw-bg": `linear-gradient(135deg, ${THEME_COLORS.light.bg} 50%, ${THEME_COLORS.dark.bg} 50%)`,
       "--sw-accent": THEME_COLORS.dark.accent
     };
   }
+  const variant = getThemeVariant(family, wantDark);
+  const colors = THEME_COLORS[variant] || THEME_COLORS[family] || THEME_COLORS.dark;
   return {
-    "--sw-bg": THEME_COLORS[th]?.bg || "#070707",
-    "--sw-accent": THEME_COLORS[th]?.accent || "#00A046"
+    "--sw-bg": colors.bg,
+    "--sw-accent": colors.accent
   };
 }
 
@@ -241,26 +250,63 @@ export default function SettingsView() {
           <h3>
             <i className="fa-solid fa-palette"></i> {t("settingsAppearance")}
           </h3>
+
+          <div className="settings-row">
+            <div className="settings-text">
+              <strong>{t("settingsThemeMode")}</strong>
+              <span>{t("settingsThemeModeHint")}</span>
+            </div>
+            <div className="segmented-control" role="group" aria-label={t("settingsThemeMode")}>
+              <button
+                type="button"
+                className={`segment ${!isDarkTheme(theme) ? "active" : ""}`}
+                onClick={() => {
+                  const fam = getThemeFamily(theme);
+                  setTheme(getThemeVariant(fam, false));
+                }}
+              >
+                <i className="fa-solid fa-sun"></i> {t("themeLightMode")}
+              </button>
+              <button
+                type="button"
+                className={`segment ${isDarkTheme(theme) ? "active" : ""}`}
+                onClick={() => {
+                  const fam = getThemeFamily(theme);
+                  setTheme(getThemeVariant(fam, true));
+                }}
+              >
+                <i className="fa-solid fa-moon"></i> {t("themeDarkMode")}
+              </button>
+            </div>
+          </div>
+
           <div className="settings-row column">
             <div className="settings-text">
               <strong>{t("settingsTheme")}</strong>
               <span>{t("settingsThemeHint")}</span>
             </div>
             <div className="theme-grid" role="radiogroup" aria-label={t("settingsTheme")}>
-              {THEMES.map(th => {
-                const isActive = theme === th;
-                const themeName = t(`theme.${th}`) || th;
+              {THEME_FAMILIES.map(family => {
+                const isDark = isDarkTheme(theme);
+                const isActive = getThemeFamily(theme) === family;
+                const themeName = t(`theme.${family}`) || family;
                 return (
                   <button
-                    key={th}
+                    key={family}
                     type="button"
                     role="radio"
                     aria-checked={isActive}
                     className={`theme-option ${isActive ? "active" : ""}`}
-                    onClick={() => setTheme(th)}
+                    onClick={() => {
+                      if (family === "system") {
+                        setTheme("system");
+                      } else {
+                        setTheme(getThemeVariant(family, isDark));
+                      }
+                    }}
                     title={themeName}
                   >
-                    <span className="theme-swatch" style={swatchStyle(th)}>
+                    <span className="theme-swatch" style={swatchStyle(family, isDark)}>
                       <span className="swatch-stripe" />
                       {isActive && (
                         <svg
