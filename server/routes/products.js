@@ -3,6 +3,7 @@ const { withTransaction } = require('../db');
 const {
     db, PRODUCT_SELECT, mapProductRow, ensureCategory, attributesFromBody, FK_VIOLATION
 } = require('../lib/mapping');
+const { getCategoryTitle } = require('../lib/productTranslations');
 const router = express.Router();
 
 router.all('/', async (req, res) => {
@@ -31,8 +32,9 @@ router.all('/', async (req, res) => {
                 `SELECT DISTINCT c.name FROM categories c JOIN products p ON p.category_id = c.id ORDER BY c.name ASC`);
             const categories = rows.map(row => {
                 const slug = row.name;
-                const name = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                return { slug, name };
+                const nameEn = getCategoryTitle(slug, 'en');
+                const nameUk = getCategoryTitle(slug, 'uk');
+                return { slug, name: nameEn, nameEn, nameUk };
             });
             return res.json({ success: true, categories });
         }

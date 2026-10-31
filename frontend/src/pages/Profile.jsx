@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { addProduct, deleteMyProduct, getCategories, getMyProducts, getOrders } from "../api";
 import SettingsView from "../components/SettingsView";
+import ViewedProductsView from "../components/ViewedProductsView";
 
 const EMPTY_FORM = {
   title: "",
@@ -157,7 +158,7 @@ function SellerModal({ open, onClose, onSaved }) {
 }
 
 export default function Profile({ defaultTab = "overview" }) {
-  const { t, user, cart, favorites, toggleTheme, logout, showToast } = useApp();
+  const { t, tProduct, tCategory, formatPrice, user, cart, favorites, viewedProducts, toggleTheme, logout, showToast } = useApp();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get("tab");
@@ -262,10 +263,26 @@ export default function Profile({ defaultTab = "overview" }) {
                 <i className="fa-solid fa-gear"></i>
                 <span>{t("settingsTitle")}</span>
               </button>
+              <button
+                type="button"
+                className={`profile-tab-btn ${activeTab === "viewed" ? "active" : ""}`}
+                onClick={() => {
+                  setActiveTab("viewed");
+                  setSearchParams({ tab: "viewed" });
+                }}
+              >
+                <i className="fa-solid fa-clock-rotate-left"></i>
+                <span>{t("tabViewed")}</span>
+                {viewedProducts && viewedProducts.length > 0 && (
+                  <span className="profile-tab-badge">{viewedProducts.length}</span>
+                )}
+              </button>
             </div>
 
             {activeTab === "settings" ? (
               <SettingsView />
+            ) : activeTab === "viewed" ? (
+              <ViewedProductsView />
             ) : (
               <>
                 <div className="profile-cards">
@@ -295,7 +312,23 @@ export default function Profile({ defaultTab = "overview" }) {
                   </div>
 
                   <div className="profile-card">
-                    <i className="fa-solid fa-circle-half-stroke"></i>
+                    <i className="fa-solid fa-clock-rotate-left"></i>
+                    <h3>{t("tabViewed")}</h3>
+                    <p>{t("viewedCount", { count: viewedProducts ? viewedProducts.length : 0 })}</p>
+                    <a
+                      href="#viewed"
+                      onClick={event => {
+                        event.preventDefault();
+                        setActiveTab("viewed");
+                        setSearchParams({ tab: "viewed" });
+                      }}
+                    >
+                      {t("goTo")}
+                    </a>
+                  </div>
+
+                  <div className="profile-card">
+                    <i className="fa-solid fa-themeisle"></i>
                     <h3>{t("theme")}</h3>
                     <p>{t("lightDark")}</p>
                     <button className="btn-outline" id="profileTheme" onClick={toggleTheme}>{t("switchAction")}</button>
@@ -376,10 +409,10 @@ export default function Profile({ defaultTab = "overview" }) {
                           <div className="product-seller-badge">
                             <i className="fa-solid fa-store"></i> {product.seller || user.name}
                           </div>
-                          <div className="seller-product-cat">{product.category}</div>
-                          <h4 className="seller-product-title" title={product.title}>{product.title}</h4>
+                          <div className="seller-product-cat">{tCategory(product.category)}</div>
+                          <h4 className="seller-product-title" title={tProduct(product)}>{tProduct(product)}</h4>
                           <div className="seller-product-meta">
-                            <div className="seller-product-price">{product.price}$</div>
+                            <div className="seller-product-price">{formatPrice(product.price)}</div>
                             <div style={{ fontSize: "13px", color: "var(--gray)" }}>
                               <i className="fa-solid fa-warehouse"></i> {product.stock} шт.
                             </div>

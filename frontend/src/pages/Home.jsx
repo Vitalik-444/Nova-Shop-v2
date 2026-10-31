@@ -24,7 +24,7 @@ const ADVANTAGES = [
 ];
 
 export default function Home() {
-  const { t } = useApp();
+  const { t, tCategory } = useApp();
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
@@ -55,10 +55,10 @@ export default function Home() {
           <h2 className="title">{t("categories")}</h2>
           <div className="categories-grid">
             {CATEGORY_CARDS.map(([icon, key]) => (
-              <div className="category-card" key={key}>
+              <Link to={`/catalog?category=${key}`} className="category-card" key={key}>
                 <i className={`fa-solid ${icon}`}></i>
-                <h3>{t(key)}</h3>
-              </div>
+                <h3>{tCategory(key) || t(key)}</h3>
+              </Link>
             ))}
           </div>
         </div>

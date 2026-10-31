@@ -2634,6 +2634,136 @@ select.input{
     color: var(--green);
     border-bottom-color: var(--green);
 }
+.profile-tab-badge {
+    background: var(--green);
+    color: var(--accent-ink, #ffffff);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* Viewed Products View */
+.viewed-products-view {
+    padding: 6px 0 30px;
+}
+
+.viewed-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.viewed-header .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.viewed-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.viewed-title .count-pill {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(var(--accent-rgb, 0, 160, 70), 0.15);
+    color: var(--green);
+    border: 1px solid rgba(var(--accent-rgb, 0, 160, 70), 0.3);
+}
+
+.viewed-subtitle {
+    font-size: 14px;
+    color: var(--gray);
+    margin: 0;
+}
+
+.clear-history-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-history-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+}
+
+/* Viewed Empty State */
+.viewed-empty {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px dashed var(--border);
+    margin-top: 10px;
+}
+
+.empty-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(var(--accent-rgb, 0, 160, 70), 0.1);
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 20px;
+}
+
+.viewed-empty h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    color: var(--text);
+}
+
+.viewed-empty p {
+    color: var(--gray);
+    font-size: 15px;
+    max-width: 440px;
+    margin: 0 auto 24px;
+}
+
+.empty-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 26px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
 
 .settings-panel {
     background: var(--surface);

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { getStorage, setStorage } from "../utils/storage";
 
 export default function Header() {
   const { t, user, cart, favorites, theme, toggleTheme, isDarkTheme, language, setLanguage } = useApp();
@@ -9,6 +10,12 @@ export default function Header() {
 
   const search = () => {
     const value = query.trim();
+    if (value) {
+      const history = getStorage("recent_searches", []);
+      const updated = [value, ...history.filter(h => h.toLowerCase() !== value.toLowerCase())].slice(0, 10);
+      setStorage("recent_searches", updated);
+      setStorage("search_history", updated);
+    }
     navigate(value ? `/catalog?q=${encodeURIComponent(value)}` : "/catalog");
   };
 

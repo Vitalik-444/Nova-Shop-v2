@@ -155,26 +155,52 @@ router.all('/', async (req, res) => {
         if (action === 'send-test-email') {
             if (!req.session.user_id) return res.status(401).json({ success: false, message: 'Не авторизовано' });
 
-            const { rows } = await db.query('SELECT full_name, email FROM users WHERE id = $1 LIMIT 1', [req.session.user_id]);
+            const { rows } = await db.query('SELECT full_name, email, settings FROM users WHERE id = $1 LIMIT 1', [req.session.user_id]);
             if (!rows.length) return res.status(404).json({ success: false, message: 'Користувача не знайдено' });
 
             const u = rows[0];
-            const html = `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-                    <h2 style="color: #10b981; margin-top: 0;">NovaShop: Тестове повідомлення</h2>
-                    <p>Вітаємо, <b>${u.full_name}</b>!</p>
-                    <p>Це перевірочний лист від інтернет-магазину NovaShop. Якщо ви бачите цей текст, налаштування пошти (SMTP) та відправка сповіщень працюють належним чином.</p>
+            const lang = (body.language || req.query.language || (u.settings && u.settings.language)) === 'en' ? 'en' : 'uk';
+            const isEn = lang === 'en';
+
+            const subject = isEn ? 'NovaShop: Test Notification' : 'NovaShop: Тестове повідомлення';
+            const html = isEn ? `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px; background: #ffffff;">
+                    <h2 style="color: #00A046; margin-top: 0;">NovaShop: Test Notification</h2>
+                    <p style="font-size: 15px; color: #333;">Hello, <b>${u.full_name}</b>!</p>
+                    <p style="font-size: 14px; line-height: 1.6; color: #555;">This is a test notification from the NovaShop online store. If you can see this message, your email delivery (SMTP) and notification settings are configured and operating properly.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                    <p style="font-size: 12px; color: #888;">Sent from NovaShop user settings panel.</p>
+                </div>
+            ` : `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px; background: #ffffff;">
+                    <h2 style="color: #00A046; margin-top: 0;">NovaShop: Тестове повідомлення</h2>
+                    <p style="font-size: 15px; color: #333;">Вітаємо, <b>${u.full_name}</b>!</p>
+                    <p style="font-size: 14px; line-height: 1.6; color: #555;">Це перевірочний лист від інтернет-магазину NovaShop. Якщо ви бачите цей текст, налаштування пошти (SMTP) та відправка сповіщень працюють належним чином.</p>
                     <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
                     <p style="font-size: 12px; color: #888;">Відправлено з системи налаштувань NovaShop.</p>
                 </div>
             `;
-            const result = await sendMail(u.email, u.full_name, 'Тестове повідомлення від NovaShop', html);
+
+            const result = await sendMail(u.email, u.full_name, subject, html);
             if (result && result.messageId) {
-                return res.json({ success: true, message: `Лист успішно надіслано на ${u.email}`, messageId: result.messageId });
+                return res.json({
+                    success: true,
+                    message: isEn ? `Email successfully sent to ${u.email}` : `Лист успішно надіслано на ${u.email}`,
+                    messageId: result.messageId
+                });
             } else if (result && result.simulated) {
-                return res.json({ success: true, message: `Симуляція: лист сформовано для ${u.email} (SMTP не налаштовано в .env)`, simulated: true });
+                return res.json({
+                    success: true,
+                    message: isEn
+                        ? `Simulation: email generated for ${u.email} (SMTP not configured in .env)`
+                        : `Симуляція: лист сформовано для ${u.email} (SMTP не налаштовано в .env)`,
+                    simulated: true
+                });
             } else {
-                return res.json({ success: true, message: `Перевірку завершено для ${u.email}` });
+                return res.json({
+                    success: true,
+                    message: isEn ? `Verification completed for ${u.email}` : `Перевірку завершено для ${u.email}`
+                });
             }
         }
 

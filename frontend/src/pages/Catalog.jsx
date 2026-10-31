@@ -8,15 +8,16 @@ const PAGE_SIZE = 12;
 const MAX_PAGE_BUTTONS = 7;
 
 export default function Catalog() {
-  const { t } = useApp();
+  const { t, tProduct, tCategory, defaultSort } = useApp();
   const [searchParams] = useSearchParams();
   const urlQuery = searchParams.get("q") || "";
+  const urlCategory = searchParams.get("category") || "";
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState(urlCategory || "all");
   const [search, setSearch] = useState(urlQuery);
-  const [sort, setSort] = useState("default");
+  const [sort, setSort] = useState(() => defaultSort || "default");
   const [page, setPage] = useState(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -24,6 +25,14 @@ export default function Catalog() {
     getProducts(200).then(setProducts);
     getCategories().then(setCategories);
   }, []);
+
+  useEffect(() => {
+    if (defaultSort) setSort(defaultSort);
+  }, [defaultSort]);
+
+  useEffect(() => {
+    if (urlCategory) setCategory(urlCategory);
+  }, [urlCategory]);
 
   useEffect(() => {
     setSearch(urlQuery);
@@ -53,21 +62,34 @@ export default function Catalog() {
 
     const value = search.trim().toLowerCase();
     if (value) {
-      list = list.filter(product => product.title.toLowerCase().includes(value));
+      list = list.filter(product => {
+        const titleEn = (product.titleEn || product.title || "").toLowerCase();
+        const titleUk = (product.titleUk || "").toLowerCase();
+        const translated = tProduct(product).toLowerCase();
+        return titleEn.includes(value) || titleUk.includes(value) || translated.includes(value);
+      });
     }
 
     switch (sort) {
       case "priceAsc":
+      case "price_asc":
         list.sort((a, b) => a.price - b.price);
         break;
       case "priceDesc":
+      case "price_desc":
         list.sort((a, b) => b.price - a.price);
         break;
       case "rating":
-        list.sort((a, b) => b.rating - a.rating);
+        list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       case "title":
-        list.sort((a, b) => a.title.localeCompare(b.title));
+        list.sort((a, b) => tProduct(a).localeCompare(tProduct(b)));
+        break;
+      case "popular":
+        list.sort((a, b) => (b.reviewsCount || 0) - (a.reviewsCount || 0));
+        break;
+      case "newest":
+        list.sort((a, b) => b.id - a.id);
         break;
       default:
         break;
@@ -104,7 +126,7 @@ export default function Catalog() {
             <span>
               {category === "all"
                 ? t("allCategories")
-                : categories.find(item => item.slug === category)?.name || category}
+                : tCategory(categories.find(item => item.slug === category) || category)}
             </span>
             <i className="fa-solid fa-chevron-right" style={{ fontSize: "12px", marginLeft: "auto" }}></i>
           </button>
@@ -128,10 +150,12 @@ export default function Catalog() {
             }}
           >
             <option value="default">{t("sortDefault")}</option>
+            <option value="popular">{t("sortPopular")}</option>
             <option value="priceAsc">{t("sortPriceAsc")}</option>
             <option value="priceDesc">{t("sortPriceDesc")}</option>
             <option value="rating">{t("sortRating")}</option>
             <option value="title">{t("sortTitle")}</option>
+            <option value="newest">{t("sortNewest")}</option>
           </select>
         </div>
 
@@ -175,7 +199,7 @@ export default function Catalog() {
                     setDrawerOpen(false);
                   }}
                 >
-                  {item.name}
+                  {tCategory(item)}
                 </div>
               ))}
             </div>

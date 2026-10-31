@@ -69,6 +69,7 @@ export default function SettingsView() {
     clearSearchHistory,
     clearAppCache,
     clearCart,
+    clearFavorites,
     showToast
   } = useApp();
 
@@ -180,7 +181,8 @@ export default function SettingsView() {
     const result = await updateSettings({
       notifications_order: preferencesForm.notifications_order,
       notifications_promo: preferencesForm.notifications_promo,
-      currency: defaultCurrency
+      currency: defaultCurrency,
+      language: language
     });
     setPrefSaving(false);
 
@@ -194,7 +196,7 @@ export default function SettingsView() {
 
   const handleTestEmail = async () => {
     setEmailTesting(true);
-    const result = await sendTestEmail();
+    const result = await sendTestEmail(language);
     setEmailTesting(false);
 
     if (result && result.success) {
@@ -386,10 +388,12 @@ export default function SettingsView() {
               aria-label={t("settingsDefaultSort")}
               onChange={event => setDefaultSort(event.target.value)}
             >
+              <option value="default">{t("sortDefault")}</option>
               <option value="popular">{t("sortPopular")}</option>
-              <option value="price_asc">{t("sortPriceAsc")}</option>
-              <option value="price_desc">{t("sortPriceDesc")}</option>
+              <option value="priceAsc">{t("sortPriceAsc")}</option>
+              <option value="priceDesc">{t("sortPriceDesc")}</option>
               <option value="rating">{t("sortRating")}</option>
+              <option value="title">{t("sortTitle")}</option>
               <option value="newest">{t("sortNewest")}</option>
             </select>
           </div>
@@ -618,6 +622,7 @@ export default function SettingsView() {
               className={`settings-action-btn ${doneAction === "cart" ? "done" : ""}`}
               onClick={() => triggerDone("cart", () => {
                 clearCart();
+                clearFavorites();
                 showToast(t("settingsDone"));
               })}
             >

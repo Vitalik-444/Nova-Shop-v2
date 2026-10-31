@@ -1,7 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { I18N, DEFAULT_LANGUAGE } from "../i18n/translations";
+import { getProductTitle, getCategoryTitle, PRODUCT_TRANSLATIONS_UK, CATEGORY_TRANSLATIONS_UK, CATEGORY_TRANSLATIONS_EN } from "../i18n/productTranslations";
 import * as api from "../api";
 import { getStorage, setStorage, removeStorage } from "../utils/storage";
+
+export const CURRENCY_RATES = {
+  USD: { symbol: "$", rate: 1 },
+  UAH: { symbol: "₴", rate: 41.5 },
+  EUR: { symbol: "€", rate: 0.92 }
+};
 
 const AppContext = createContext(null);
 
@@ -109,6 +116,7 @@ export function AppProvider({ children }) {
   const [user, setUserState] = useState(null);
   const [cart, setCartState] = useState([]);
   const [favorites, setFavoritesState] = useState([]);
+  const [viewedProducts, setViewedProductsState] = useState(() => getStorage("viewed_products", []));
   const [ready, setReady] = useState(false);
   const [splash, setSplash] = useState(true);
   const [busy, setBusy] = useState(0);
@@ -117,6 +125,7 @@ export function AppProvider({ children }) {
   const userRef = useRef(null);
   const cartRef = useRef([]);
   const favoritesRef = useRef([]);
+  const viewedRef = useRef(getStorage("viewed_products", []));
   const toastTimer = useRef(null);
 
   const applyUser = useCallback(value => {
@@ -134,6 +143,12 @@ export function AppProvider({ children }) {
     setFavoritesState(list);
   }, []);
 
+  const setViewedProductsLocal = useCallback(list => {
+    viewedRef.current = list;
+    setViewedProductsState(list);
+    setStorage("viewed_products", list);
+  }, []);
+
   const t = useCallback((key, params = {}) => {
     const dictionary = I18N[language] || I18N[DEFAULT_LANGUAGE];
     let value = dictionary[key] || I18N[DEFAULT_LANGUAGE][key] || key;
@@ -143,9 +158,26 @@ export function AppProvider({ children }) {
     return value;
   }, [language]);
 
+  const tProduct = useCallback((productOrTitle) => {
+    return getProductTitle(productOrTitle, language);
+  }, [language]);
+
+  const tCategory = useCallback((categoryOrSlug) => {
+    return getCategoryTitle(categoryOrSlug, language);
+  }, [language]);
+
   const locale = language === "en" ? "en-US" : "uk-UA";
 
-  const formatPrice = useCallback(price => new Intl.NumberFormat(locale).format(price), [locale]);
+  const formatPrice = useCallback((amount) => {
+    const num = Number(amount) || 0;
+    const cfg = CURRENCY_RATES[defaultCurrency] || CURRENCY_RATES.USD;
+    const converted = num * cfg.rate;
+    const formatted = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: Number.isInteger(converted) ? 0 : 2,
+      maximumFractionDigits: 2
+    }).format(converted);
+    return `${formatted} ${cfg.symbol}`;
+  }, [defaultCurrency, locale]);
 
   const showToast = useCallback((message, type = "success") => {
     clearTimeout(toastTimer.current);
@@ -166,17 +198,28 @@ export function AppProvider({ children }) {
 
   const loadUserData = useCallback(async currentUser => {
     if (currentUser) {
-      const [serverFavorites, serverCart] = await Promise.all([
+      const [serverFavorites, serverCart, serverViewed] = await Promise.all([
         api.fetchServerFavorites(),
-        api.fetchServerCart()
+        api.fetchServerCart(),
+        api.fetchServerViewed()
       ]);
       setFavoritesLocal(serverFavorites ?? getStorage("favorites", []));
       setCartLocal(serverCart ?? getStorage("cart", []));
+      if (serverViewed && serverViewed.length) {
+        setViewedProductsLocal(serverViewed);
+      } else {
+        const local = getStorage("viewed_products", []);
+        if (local && local.length) {
+          api.syncViewed(local);
+        }
+        setViewedProductsLocal(local || []);
+      }
     } else {
       setFavoritesLocal(getStorage("favorites", []));
       setCartLocal(getStorage("cart", []));
+      setViewedProductsLocal(getStorage("viewed_products", []));
     }
-  }, [setCartLocal, setFavoritesLocal]);
+  }, [setCartLocal, setFavoritesLocal, setViewedProductsLocal]);
 
   useEffect(() => {
     let active = true;
@@ -263,13 +306,14 @@ export function AppProvider({ children }) {
   }, []);
 
   const resetSettings = useCallback(() => {
+    setLanguage("uk");
     setTheme("light");
     setThemeEffects(true);
     setBlurPreviews(false);
     setScrollTopButton(true);
     setDefaultCurrency("USD");
-    setDefaultSort("popular");
-  }, []);
+    setDefaultSort("default");
+  }, [setLanguage]);
 
   const clearSearchHistory = useCallback(() => {
     removeStorage("recent_searches");
@@ -362,6 +406,10 @@ export function AppProvider({ children }) {
     }
   }, [persistFavorites, showToast, t]);
 
+  const clearFavorites = useCallback(() => {
+    persistFavorites([]);
+  }, [persistFavorites]);
+
   const login = useCallback(async (email, password) => {
     const result = await api.login(email, password);
     if (result.success) {
@@ -380,14 +428,35 @@ export function AppProvider({ children }) {
     return result;
   }, [applyUser, loadUserData]);
 
+  const addViewedProduct = useCallback(product => {
+    if (!product || !product.id) return;
+    const current = viewedRef.current || [];
+    const filtered = current.filter(p => Number(p.id) !== Number(product.id));
+    const updated = [{ ...product, viewedAt: new Date().toISOString() }, ...filtered].slice(0, 50);
+    setViewedProductsLocal(updated);
+
+    if (userRef.current) {
+      api.recordServerViewed(product.id);
+    }
+  }, [setViewedProductsLocal]);
+
+  const clearViewedProducts = useCallback(async () => {
+    setViewedProductsLocal([]);
+    if (userRef.current) {
+      await api.clearServerViewed();
+    }
+  }, [setViewedProductsLocal]);
+
   const logout = useCallback(async () => {
     await api.logout();
     applyUser(null);
     setCartLocal([]);
     setFavoritesLocal([]);
+    setViewedProductsLocal([]);
     removeStorage("cart");
     removeStorage("favorites");
-  }, [applyUser, setCartLocal, setFavoritesLocal]);
+    removeStorage("viewed_products");
+  }, [applyUser, setCartLocal, setFavoritesLocal, setViewedProductsLocal]);
 
   const updateUser = useCallback(updated => {
     applyUser(updated);
@@ -397,6 +466,8 @@ export function AppProvider({ children }) {
     language,
     setLanguage,
     t,
+    tProduct,
+    tCategory,
     formatPrice,
     theme,
     setTheme,
@@ -432,15 +503,20 @@ export function AppProvider({ children }) {
     favorites,
     isFavorite,
     toggleFavorite,
+    clearFavorites,
+    viewedProducts,
+    addViewedProduct,
+    clearViewedProducts,
     login,
     register,
     logout
   }), [
-    language, setLanguage, t, formatPrice, theme, setTheme, toggleTheme, themeEffects, blurPreviews,
+    language, setLanguage, t, tProduct, tCategory, formatPrice, theme, setTheme, toggleTheme, themeEffects, blurPreviews,
     scrollTopButton, defaultCurrency, defaultSort, resetSettings, clearSearchHistory, clearAppCache,
     user, updateUser, ready, splash, busy,
     withLoader, toast, showToast, cart, addToCart, changeQuantity, removeFromCart, clearCart,
-    favorites, isFavorite, toggleFavorite, login, register, logout
+    favorites, isFavorite, toggleFavorite, clearFavorites, viewedProducts, addViewedProduct, clearViewedProducts,
+    login, register, logout
   ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

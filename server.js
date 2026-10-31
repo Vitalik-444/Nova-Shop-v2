@@ -37,6 +37,8 @@ app.use('/api/orders.php', require('./server/routes/orders'));
 app.use('/api/reviews.php', require('./server/routes/reviews'));
 app.use('/api/admin.php', require('./server/routes/admin'));
 app.use('/api/favorites.php', require('./server/routes/favorites'));
+app.use('/api/viewed.php', require('./server/routes/viewed'));
+app.use('/api/viewed', require('./server/routes/viewed'));
 
 // Start server
 app.listen(PORT, () => {

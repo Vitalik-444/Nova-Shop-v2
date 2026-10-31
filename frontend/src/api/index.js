@@ -5,6 +5,7 @@ const ADMIN_URL = "/api/admin.php";
 const AUTH_URL = "/api/auth.php";
 const CART_URL = "/api/cart.php";
 const FAVORITES_URL = "/api/favorites.php";
+const VIEWED_URL = "/api/viewed.php";
 
 const NETWORK_ERROR = { success: false, message: "Ошибка сети" };
 
@@ -121,8 +122,8 @@ export function changePassword(oldPassword, newPassword) {
   return safe(() => send(`${AUTH_URL}?action=change-password`, { oldPassword, newPassword }), NETWORK_ERROR);
 }
 
-export function sendTestEmail() {
-  return safe(() => send(`${AUTH_URL}?action=send-test-email`, {}), NETWORK_ERROR);
+export function sendTestEmail(language = "uk") {
+  return safe(() => send(`${AUTH_URL}?action=send-test-email`, { language }), NETWORK_ERROR);
 }
 
 export function fetchServerCart() {
@@ -145,6 +146,25 @@ export function fetchServerFavorites() {
 
 export function syncFavorites(favorites) {
   return safe(() => send(`${FAVORITES_URL}?action=sync`, favorites), null);
+}
+
+export function fetchServerViewed() {
+  return safe(async () => {
+    const data = await request(`${VIEWED_URL}?action=list`);
+    return data.success && Array.isArray(data.viewed) ? data.viewed : [];
+  }, null);
+}
+
+export function recordServerViewed(productId) {
+  return safe(() => send(`${VIEWED_URL}?action=add`, { productId }), null);
+}
+
+export function clearServerViewed() {
+  return safe(() => send(`${VIEWED_URL}?action=clear`, {}), null);
+}
+
+export function syncViewed(viewed) {
+  return safe(() => send(`${VIEWED_URL}?action=sync`, viewed), null);
 }
 
 function adminGet(action) {

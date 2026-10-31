@@ -59,7 +59,7 @@ function AdminOrders() {
                   <br />
                   <span className="admin-muted">{order.user_email}</span>
                 </td>
-                <td>{formatPrice(order.total)}$</td>
+                <td>{formatPrice(order.total)}</td>
                 <td>{formatOrderDate(order.created_at, language)}</td>
                 <td>
                   <select
@@ -183,7 +183,7 @@ function ProductModal({ product, onClose, onSaved }) {
 }
 
 function AdminProducts() {
-  const { t, showToast } = useApp();
+  const { t, tProduct, tCategory, formatPrice, showToast } = useApp();
   const [products, setProducts] = useState(null);
   const [editing, setEditing] = useState(undefined);
 
@@ -235,10 +235,10 @@ function AdminProducts() {
             {products && products.map(product => (
               <tr key={product.id}>
                 <td><img src={product.thumbnail} alt="" className="admin-thumb" /></td>
-                <td>{product.title}</td>
-                <td>{product.category}</td>
+                <td>{tProduct(product)}</td>
+                <td>{tCategory(product.category)}</td>
                 <td>{product.seller || "NovaShop"}</td>
-                <td>{product.price}$</td>
+                <td>{formatPrice(product.price)}</td>
                 <td>{product.stock}</td>
                 <td className="admin-row-actions">
                   <button className="admin-icon-btn" title={t("edit")} onClick={() => setEditing(product)}>

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 
 export default function Cart() {
-  const { t, cart, changeQuantity, removeFromCart } = useApp();
+  const { t, tProduct, formatPrice, cart, changeQuantity, removeFromCart } = useApp();
 
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -19,10 +19,10 @@ export default function Cart() {
             ) : (
               cart.map(product => (
                 <div className="cart-item" key={product.id}>
-                  <img src={product.thumbnail} alt={product.title} />
+                  <img src={product.thumbnail} alt={tProduct(product)} />
                   <div className="cart-item-info">
-                    <h3 className="cart-item-title">{product.title}</h3>
-                    <div className="cart-item-price">{product.price}$</div>
+                    <h3 className="cart-item-title">{tProduct(product)}</h3>
+                    <div className="cart-item-price">{formatPrice(product.price)}</div>
                   </div>
                   <div className="quantity">
                     <button onClick={() => changeQuantity(product.id, -1)}>-</button>
@@ -47,7 +47,7 @@ export default function Cart() {
 
             <div className="summary-row">
               <span>{t("sum")}</span>
-              <strong className="cart-total-price">{totalPrice.toFixed(2)} $</strong>
+              <strong className="cart-total-price">{formatPrice(totalPrice)}</strong>
             </div>
 
             <Link to="/checkout" className="btn checkout-btn">{t("checkout")}</Link>

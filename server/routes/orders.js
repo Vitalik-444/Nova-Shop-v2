@@ -2,48 +2,103 @@ const express = require('express');
 const { withTransaction } = require('../db');
 const { db, STATUS_FROM_DB } = require('../lib/mapping');
 const { sendMail } = require('../mailer');
+const { getProductTitle } = require('../lib/productTranslations');
 const router = express.Router();
 
-function buildOrderEmailHtml(orderId, customer, items, total) {
-    const deliveryLabels = { courier: 'Курьером', post: 'В отделение почты', pickup: 'Самовывоз' };
-    const paymentLabels = { card: 'Картой онлайн', cash: 'При получении', invoice: 'Счет для оплаты' };
+function buildOrderEmailHtml(orderId, customer, items, total, lang = 'uk') {
+    const isEn = lang === 'en';
+    const deliveryLabels = isEn
+        ? { courier: 'Courier delivery', post: 'To post office', pickup: 'Self-pickup' }
+        : { courier: "Кур'єром", post: 'До відділення пошти', pickup: 'Самовивіз' };
+    const paymentLabels = isEn
+        ? { card: 'Online card payment', cash: 'Cash on delivery', invoice: 'Bank invoice' }
+        : { card: 'Карткою онлайн', cash: 'При отриманні', invoice: 'Рахунок для оплати' };
 
     let rows = '';
     for (const item of items) {
-        const title = (item.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const rawTitle = getProductTitle(item.title, lang);
+        const title = (rawTitle || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const quantity = item.quantity || 1;
         const lineTotal = (item.price || 0) * quantity;
         rows += `<tr>
-            <td style="padding:8px 0;border-bottom:1px solid #eee;">${title}</td>
-            <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:center;">${quantity}</td>
-            <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;">${lineTotal.toFixed(2)} $</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #eee;color:#222;">${title}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:center;color:#444;">${quantity}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:right;font-weight:600;color:#111;">${lineTotal.toFixed(2)} $</td>
         </tr>`;
     }
 
     const delivery = deliveryLabels[customer.delivery] || customer.delivery;
     const payment = paymentLabels[customer.payment] || customer.payment;
 
+    if (isEn) {
+        return `
+        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;color:#222;border:1px solid #e5e7eb;border-radius:12px;padding:24px;background:#ffffff;">
+            <div style="border-bottom:2px solid #00A046;padding-bottom:16px;margin-bottom:20px;">
+                <h1 style="color:#00A046;margin:0 0 6px;font-size:24px;">NovaShop</h1>
+                <p style="margin:0;color:#6b7280;font-size:14px;">Order confirmation</p>
+            </div>
+            <h2 style="color:#111827;font-size:20px;margin-top:0;">Thank you for your order, ${customer.name} ${customer.surname}!</h2>
+            <p style="font-size:15px;line-height:1.5;color:#374151;">Your order <strong>#${orderId}</strong> has been received and is being processed.</p>
+            <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+                <thead>
+                    <tr style="background:#f9fafb;">
+                        <th style="text-align:left;border-bottom:2px solid #00A046;padding:10px 8px;font-size:13px;text-transform:uppercase;color:#4b5563;">Product</th>
+                        <th style="text-align:center;border-bottom:2px solid #00A046;padding:10px 8px;font-size:13px;text-transform:uppercase;color:#4b5563;">Qty</th>
+                        <th style="text-align:right;border-bottom:2px solid #00A046;padding:10px 8px;font-size:13px;text-transform:uppercase;color:#4b5563;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <p style="text-align:right;font-size:18px;margin:16px 0 24px;">
+                <span style="color:#6b7280;">Total:</span> <strong style="color:#00A046;font-size:22px;">${total.toFixed(2)} $</strong>
+            </p>
+            <div style="background:#f9fafb;border-radius:8px;padding:16px;border:1px solid #f3f4f6;">
+                <h3 style="margin-top:0;margin-bottom:12px;font-size:16px;color:#111827;">Delivery details</h3>
+                <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">
+                    <strong>Address:</strong> ${customer.address}, ${customer.city}, ${customer.postcode}<br>
+                    <strong>Phone:</strong> ${customer.phone}<br>
+                    <strong>Delivery method:</strong> ${delivery}<br>
+                    <strong>Payment method:</strong> ${payment}
+                </p>
+            </div>
+            <p style="font-size:12px;color:#9ca3af;margin-top:24px;border-top:1px solid #e5e7eb;padding-top:14px;text-align:center;">
+                Thank you for choosing NovaShop! If you have any questions, our 24/7 support is here to help.
+            </p>
+        </div>`;
+    }
+
     return `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#222;">
-        <h2 style="color:#4b3aff;">Спасибо за заказ, ${customer.name} ${customer.surname}!</h2>
-        <p>Ваш заказ <strong>№${orderId}</strong> принят и передан в обработку.</p>
-        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;color:#222;border:1px solid #e5e7eb;border-radius:12px;padding:24px;background:#ffffff;">
+        <div style="border-bottom:2px solid #00A046;padding-bottom:16px;margin-bottom:20px;">
+            <h1 style="color:#00A046;margin:0 0 6px;font-size:24px;">NovaShop</h1>
+            <p style="margin:0;color:#6b7280;font-size:14px;">Підтвердження замовлення</p>
+        </div>
+        <h2 style="color:#111827;font-size:20px;margin-top:0;">Дякуємо за замовлення, ${customer.name} ${customer.surname}!</h2>
+        <p style="font-size:15px;line-height:1.5;color:#374151;">Ваше замовлення <strong>№${orderId}</strong> успішно прийнято та передано в обробку.</p>
+        <table style="width:100%;border-collapse:collapse;margin:20px 0;">
             <thead>
-                <tr>
-                    <th style="text-align:left;border-bottom:2px solid #4b3aff;padding-bottom:8px;">Товар</th>
-                    <th style="text-align:center;border-bottom:2px solid #4b3aff;padding-bottom:8px;">Кол-во</th>
-                    <th style="text-align:right;border-bottom:2px solid #4b3aff;padding-bottom:8px;">Сумма</th>
+                <tr style="background:#f9fafb;">
+                    <th style="text-align:left;border-bottom:2px solid #00A046;padding:10px 8px;font-size:13px;text-transform:uppercase;color:#4b5563;">Товар</th>
+                    <th style="text-align:center;border-bottom:2px solid #00A046;padding:10px 8px;font-size:13px;text-transform:uppercase;color:#4b5563;">К-сть</th>
+                    <th style="text-align:right;border-bottom:2px solid #00A046;padding:10px 8px;font-size:13px;text-transform:uppercase;color:#4b5563;">Сума</th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
         </table>
-        <p style="text-align:right;font-size:18px;"><strong>Итого: ${total.toFixed(2)} $</strong></p>
-        <h3>Данные доставки</h3>
-        <p>
-            Адрес: ${customer.address}, ${customer.city}, ${customer.postcode}<br>
-            Телефон: ${customer.phone}<br>
-            Способ доставки: ${delivery}<br>
-            Способ оплаты: ${payment}
+        <p style="text-align:right;font-size:18px;margin:16px 0 24px;">
+            <span style="color:#6b7280;">Разом до сплати:</span> <strong style="color:#00A046;font-size:22px;">${total.toFixed(2)} $</strong>
+        </p>
+        <div style="background:#f9fafb;border-radius:8px;padding:16px;border:1px solid #f3f4f6;">
+            <h3 style="margin-top:0;margin-bottom:12px;font-size:16px;color:#111827;">Дані доставки</h3>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">
+                <strong>Адреса:</strong> ${customer.address}, ${customer.city}, ${customer.postcode}<br>
+                <strong>Телефон:</strong> ${customer.phone}<br>
+                <strong>Спосіб доставки:</strong> ${delivery}<br>
+                <strong>Спосіб оплати:</strong> ${payment}
+            </p>
+        </div>
+        <p style="font-size:12px;color:#9ca3af;margin-top:24px;border-top:1px solid #e5e7eb;padding-top:14px;text-align:center;">
+            Дякуємо, що обрали NovaShop! Служба підтримки працює 24/7 і завжди готова допомогти.
         </p>
     </div>`;
 }
@@ -125,8 +180,11 @@ router.all('/', async (req, res) => {
             let emailSent = true;
             let emailError = null;
             try {
-                const subject = `NovaShop — заказ №${orderId} подтверждён`;
-                const html = buildOrderEmailHtml(orderId, customer, items, total);
+                const lang = (customer.language === 'en') ? 'en' : 'uk';
+                const subject = lang === 'en'
+                    ? `NovaShop — Order #${orderId} confirmed`
+                    : `NovaShop — замовлення №${orderId} підтверджено`;
+                const html = buildOrderEmailHtml(orderId, customer, items, total, lang);
                 await sendMail(customer.email, `${customer.name} ${customer.surname}`, subject, html);
             } catch (mailError) {
                 emailSent = false;

@@ -17,7 +17,7 @@ const EMPTY_FORM = {
 };
 
 export default function Checkout() {
-  const { t, user, cart, clearCart, showToast, withLoader } = useApp();
+  const { t, language, formatPrice, user, cart, clearCart, showToast, withLoader } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY_FORM);
 
@@ -58,7 +58,8 @@ export default function Checkout() {
       address: form.address.trim(),
       delivery: form.delivery,
       payment: form.payment,
-      comment: form.comment.trim()
+      comment: form.comment.trim(),
+      language
     };
 
     const result = await withLoader(() => createOrder(customer, cart));
@@ -149,7 +150,7 @@ export default function Checkout() {
 
             <div className="checkout-total">
               <span>{t("orderSum")}</span>
-              <strong className="checkout-total-price">{totalPrice.toFixed(2)} $</strong>
+              <strong className="checkout-total-price">{formatPrice(totalPrice)}</strong>
             </div>
 
             <button className="btn auth-btn">{t("confirmOrder")}</button>

@@ -1,6 +1,7 @@
 // Прошарок між контрактом фронтенду (формат відповідей API, який чекає React)
 // і схемою PostgreSQL з db/sql.
 const db = require('../db');
+const { getProductTitle, getCategoryTitle } = require('./productTranslations');
 
 // Статуси: фронтенд -> БД (CHECK chk_orders_status_allowed) і назад
 const STATUS_TO_DB = { new: 'pending', processing: 'paid', shipped: 'shipped', completed: 'delivered', cancelled: 'cancelled' };
@@ -29,12 +30,20 @@ function mapProductRow(row) {
     const reviewSum = Number(row.rating_sum) || 0;
     const baseRating = Number(a.rating) || 0;
     const rating = Math.round((baseRating + reviewSum) / (1 + reviewCount) * 100) / 100;
+    const titleEn = row.title;
+    const titleUk = a.title_uk || getProductTitle(row.title, 'uk');
+    const categoryEn = getCategoryTitle(row.category, 'en');
+    const categoryUk = getCategoryTitle(row.category, 'uk');
 
     return {
         id: Number(row.id),
         title: row.title,
+        titleEn,
+        titleUk,
         description: row.description,
         category: row.category,
+        categoryEn,
+        categoryUk,
         price: Number(row.price),
         discountPercentage: Number(a.discount_percentage) || 0,
         rating,

@@ -12,7 +12,7 @@ export const ORDER_STATUS_LABELS = {
 };
 
 export default function Orders() {
-  const { t, language, formatPrice } = useApp();
+  const { t, tProduct, language, formatPrice } = useApp();
   const [orders, setOrders] = useState(null);
 
   useEffect(() => {
@@ -45,16 +45,16 @@ export default function Orders() {
               <div className="order-items">
                 {order.items.map((item, index) => (
                   <div className="order-item-row" key={index}>
-                    <span className="order-item-title">{item.title}</span>
+                    <span className="order-item-title">{tProduct(item.title)}</span>
                     <span className="order-item-qty">{item.quantity} {t("pcs")}</span>
-                    <span className="order-item-price">{formatPrice(item.price * item.quantity)}$</span>
+                    <span className="order-item-price">{formatPrice(item.price * item.quantity)}</span>
                   </div>
                 ))}
               </div>
 
               <div className="order-card-footer">
                 <span>{t("total")}</span>
-                <span className="order-total">{formatPrice(order.total)}$</span>
+                <span className="order-total">{formatPrice(order.total)}</span>
               </div>
             </div>
           ))}

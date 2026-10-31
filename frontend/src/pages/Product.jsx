@@ -66,7 +66,7 @@ export default function Product() {
   const { id } = useParams();
   const productId = Number(id);
   const navigate = useNavigate();
-  const { t, user, language, addToCart, toggleFavorite, isFavorite, showToast } = useApp();
+  const { t, tProduct, tCategory, formatPrice, user, language, addToCart, toggleFavorite, isFavorite, showToast, addViewedProduct } = useApp();
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -107,6 +107,7 @@ export default function Product() {
       }
 
       setProduct(loaded);
+      addViewedProduct(loaded);
       const images = loaded.images && loaded.images.length ? loaded.images : [loaded.thumbnail];
       setMainImage(images[0]);
 
@@ -126,6 +127,8 @@ export default function Product() {
 
   if (!product) return null;
 
+  const title = tProduct(product);
+  const category = tCategory(product.category);
   const images = product.images && product.images.length ? product.images : [product.thumbnail];
   const favorite = isFavorite(product.id);
   const oldPrice = product.discountPercentage
@@ -135,7 +138,7 @@ export default function Product() {
   const specs = [
     [t("brand"), product.brand],
     [t("seller"), product.seller],
-    [t("category"), product.category],
+    [t("category"), category],
     [t("sku"), product.sku],
     [t("weight"), product.weight ? `${product.weight} ${t("gram")}` : null],
     [t("warranty"), product.warrantyInformation],
@@ -156,7 +159,7 @@ export default function Product() {
           <div className="product-page">
             <div className="product-gallery">
               <div className="gallery-preview">
-                <img id="mainImage" src={mainImage} alt={product.title} />
+                <img id="mainImage" src={mainImage} alt={title} />
               </div>
 
               <div className="gallery-list" id="galleryList">
@@ -164,7 +167,7 @@ export default function Product() {
                   <img
                     key={index}
                     src={image}
-                    alt={product.title}
+                    alt={title}
                     onClick={() => setMainImage(image)}
                   />
                 ))}
@@ -173,7 +176,7 @@ export default function Product() {
 
             <div className="product-details">
               <span className="product-brand">
-                {product.brand || product.category}
+                {product.brand || category}
                 {product.seller && (
                   <span className="product-seller-badge" style={{ marginLeft: "8px" }}>
                     <i className="fa-solid fa-store"></i> {t("seller")}: {product.seller}
@@ -181,7 +184,7 @@ export default function Product() {
                 )}
               </span>
 
-              <h1 className="product-name">{product.title}</h1>
+              <h1 className="product-name">{title}</h1>
 
               <div className="product-rating">
                 <i className="fa-solid fa-star"></i>
@@ -192,8 +195,8 @@ export default function Product() {
               </div>
 
               <div className="product-price">
-                <span className="current-price" id="productPrice">{product.price} $</span>
-                {oldPrice && <span className="old-price" id="oldPrice">{oldPrice} $</span>}
+                <span className="current-price" id="productPrice">{formatPrice(product.price)}</span>
+                {oldPrice && <span className="old-price" id="oldPrice">{formatPrice(oldPrice)}</span>}
               </div>
 
               <p className="product-description" id="productDescription">{product.description}</p>
