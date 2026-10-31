@@ -3166,13 +3166,13 @@ html[data-theme="sakura"] {
   --panel-3: #f8dde6;
   --line: rgba(0, 0, 0, 0.12);
   --line-strong: rgba(214, 60, 105, 0.5);
-  --muted: #7a5563;
-  --dim: #9a7b88;
+  --muted: #663d4e;
+  --dim: #8c5d71;
   --accent: #e8527f;
   --accent-rgb: 232, 82, 127;
   --accent-2: #ff7aa2;
   --accent-ink: #ffffff;
-  --text: #3a1f29;
+  --text: #2a111c;
 
   --background: var(--bg);
   --surface: var(--panel);
@@ -3193,9 +3193,9 @@ html[data-theme="autumn"] {
   --line: rgba(255, 214, 170, 0.11);
   --muted: #b39a85;
   --dim: #7d6858;
-  --accent: #e8832a;
-  --accent-rgb: 232, 131, 42;
-  --accent-2: #f5a623;
+  --accent: #c2410c;
+  --accent-rgb: 194, 65, 12;
+  --accent-2: #ea580c;
   --accent-ink: #1a0c03;
   --text: #f6e9db;
 
@@ -3233,21 +3233,22 @@ html[data-theme="halloween"] {
   --shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
 }
 
-/* Ocean */
+/* Ocean (Bioluminescent Abyss) */
 html[data-theme="ocean"] {
   color-scheme: dark;
-  --bg: #041018;
-  --panel: #071a26;
-  --panel-2: #0b2433;
-  --panel-3: #103042;
-  --line: rgba(255, 255, 255, 0.09);
-  --muted: #86a3b3;
-  --dim: #58798b;
-  --accent: #06b6d4;
-  --accent-2: #67e8f9;
-  --accent-ink: #03151a;
-  --accent-rgb: 6, 182, 212;
-  --text: #e6f4fa;
+  --bg: #021217;
+  --panel: #051d24;
+  --panel-2: #092833;
+  --panel-3: #0e3544;
+  --line: rgba(0, 229, 208, 0.16);
+  --line-strong: rgba(0, 229, 208, 0.5);
+  --muted: #7ca8b8;
+  --dim: #4d7685;
+  --accent: #00e5d0;
+  --accent-2: #2dd4bf;
+  --accent-ink: #011419;
+  --accent-rgb: 0, 229, 208;
+  --text: #e0f9f8;
 
   --background: var(--bg);
   --surface: var(--panel);
@@ -3255,7 +3256,7 @@ html[data-theme="ocean"] {
   --gray: var(--muted);
   --green: var(--accent);
   --green-hover: var(--accent-2);
-  --shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
+  --shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
 }
 
 /* Gold */
@@ -3421,14 +3422,14 @@ html[data-theme="desert"] {
   --panel-2: #f3e1bf;
   --panel-3: #ecd5a8;
   --line: rgba(90, 50, 10, 0.16);
-  --line-strong: rgba(200, 87, 30, 0.5);
-  --muted: #7a5a38;
-  --dim: #a08462;
-  --accent: #c8571e;
-  --accent-rgb: 200, 87, 30;
-  --accent-2: #e07a3a;
+  --line-strong: rgba(180, 83, 9, 0.5);
+  --muted: #573a21;
+  --dim: #7f5c3b;
+  --accent: #b45309;
+  --accent-rgb: 180, 83, 9;
+  --accent-2: #d97706;
   --accent-ink: #ffffff;
-  --text: #3b2412;
+  --text: #231205;
 
   --background: var(--bg);
   --surface: var(--panel);
@@ -3468,19 +3469,19 @@ html[data-theme="love"] {
 /* Leaves */
 html[data-theme="leaves"] {
   color-scheme: light;
-  --bg: #eef6e6;
-  --panel: #fbfff6;
-  --panel-2: #e0efd2;
-  --panel-3: #d1e6bf;
-  --line: rgba(20, 70, 20, 0.15);
-  --line-strong: rgba(63, 154, 43, 0.5);
-  --muted: #4d6b45;
-  --dim: #7a9672;
-  --accent: #3f9a2b;
-  --accent-rgb: 63, 154, 43;
-  --accent-2: #6bc24f;
+  --bg: #f2f8eb;
+  --panel: #ffffff;
+  --panel-2: #e3f0d5;
+  --panel-3: #d4e8be;
+  --line: rgba(101, 163, 13, 0.18);
+  --line-strong: rgba(101, 163, 13, 0.5);
+  --muted: #4b6628;
+  --dim: #779450;
+  --accent: #65a30d;
+  --accent-rgb: 101, 163, 13;
+  --accent-2: #4d7c0f;
   --accent-ink: #ffffff;
-  --text: #17301a;
+  --text: #192e07;
 
   --background: var(--bg);
   --surface: var(--panel);
@@ -3488,7 +3489,7 @@ html[data-theme="leaves"] {
   --gray: var(--muted);
   --green: var(--accent);
   --green-hover: var(--accent-2);
-  --shadow: 0 8px 25px rgba(63, 154, 43, 0.12);
+  --shadow: 0 8px 25px rgba(101, 163, 13, 0.12);
 }
 
 /* Midnight Light */
@@ -3676,19 +3677,19 @@ html[data-theme="sakura-dark"] {
 /* Autumn Light */
 html[data-theme="autumn-light"] {
   color-scheme: light;
-  --bg: #faf3eb;
+  --bg: #faf2eb;
   --panel: #ffffff;
-  --panel-2: #f4e5d3;
-  --panel-3: #edd7bf;
-  --line: rgba(217, 119, 6, 0.16);
-  --line-strong: rgba(217, 119, 6, 0.45);
-  --muted: #724e2d;
-  --dim: #a47a52;
-  --accent: #d97706;
-  --accent-2: #b45309;
+  --panel-2: #f4e3d0;
+  --panel-3: #edd4bc;
+  --line: rgba(180, 83, 9, 0.18);
+  --line-strong: rgba(180, 83, 9, 0.5);
+  --muted: #663f22;
+  --dim: #9a683e;
+  --accent: #b45309;
+  --accent-2: #92400e;
   --accent-ink: #ffffff;
-  --accent-rgb: 217, 119, 6;
-  --text: #2c1a0c;
+  --accent-rgb: 180, 83, 9;
+  --text: #261304;
 
   --background: var(--bg);
   --surface: var(--panel);
@@ -3836,15 +3837,15 @@ html[data-theme="leaves-dark"] {
   --panel: #111e10;
   --panel-2: #192a18;
   --panel-3: #223720;
-  --line: rgba(74, 222, 128, 0.18);
-  --line-strong: rgba(74, 222, 128, 0.5);
-  --muted: #85aa81;
-  --dim: #5a7b57;
-  --accent: #4ade80;
-  --accent-2: #22c55e;
-  --accent-ink: #091208;
-  --accent-rgb: 74, 222, 128;
-  --text: #f0fdf4;
+  --line: rgba(132, 204, 22, 0.18);
+  --line-strong: rgba(132, 204, 22, 0.5);
+  --muted: #8ba87b;
+  --dim: #5c794f;
+  --accent: #84cc16;
+  --accent-2: #a3e635;
+  --accent-ink: #142004;
+  --accent-rgb: 132, 204, 22;
+  --text: #f4fdf0;
 
   --background: var(--bg);
   --surface: var(--panel);
@@ -3855,22 +3856,22 @@ html[data-theme="leaves-dark"] {
   --shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
 }
 
-/* Ocean Light */
+/* Ocean Light (Caribbean Lagoon) */
 html[data-theme="ocean-light"] {
   color-scheme: light;
-  --bg: #f0fafd;
+  --bg: #eaf8fb;
   --panel: #ffffff;
-  --panel-2: #e0f5fb;
-  --panel-3: #ceeff7;
-  --line: rgba(8, 145, 178, 0.15);
-  --line-strong: rgba(8, 145, 178, 0.45);
-  --muted: #3d6874;
-  --dim: #6d9ca9;
-  --accent: #0891b2;
-  --accent-2: #0e7490;
+  --panel-2: #d6f2f8;
+  --panel-3: #beeaf3;
+  --line: rgba(2, 141, 155, 0.18);
+  --line-strong: rgba(2, 141, 155, 0.5);
+  --muted: #335964;
+  --dim: #5c8491;
+  --accent: #028d9b;
+  --accent-2: #036976;
   --accent-ink: #ffffff;
-  --accent-rgb: 8, 145, 178;
-  --text: #092830;
+  --accent-rgb: 2, 141, 155;
+  --text: #05262c;
 
   --background: var(--bg);
   --surface: var(--panel);
@@ -3878,7 +3879,7 @@ html[data-theme="ocean-light"] {
   --gray: var(--muted);
   --green: var(--accent);
   --green-hover: var(--accent-2);
-  --shadow: 0 8px 25px rgba(8, 145, 178, 0.12);
+  --shadow: 0 8px 25px rgba(2, 141, 155, 0.12);
 }
 
 /* Gold Light */
@@ -4019,7 +4020,7 @@ html[data-theme="halloween"] ::-webkit-scrollbar-thumb,
 html[data-theme="halloween-light"] ::-webkit-scrollbar-thumb { background: #ea580c; }
 
 html[data-theme="ocean"] ::-webkit-scrollbar-thumb,
-html[data-theme="ocean-light"] ::-webkit-scrollbar-thumb { background: #0891b2; }
+html[data-theme="ocean-light"] ::-webkit-scrollbar-thumb { background: #00e5d0; }
 
 html[data-theme="gold"] ::-webkit-scrollbar-thumb,
 html[data-theme="gold-light"] ::-webkit-scrollbar-thumb { background: #ca8a04; }
@@ -4139,11 +4140,15 @@ html[data-theme="snow-light"] body {
 }
 
 html[data-theme="ocean"] body {
-  background-image: radial-gradient(ellipse 60% 40% at 80% -5%, rgba(6, 182, 212, 0.22), transparent 70%);
+  background-image:
+    radial-gradient(ellipse 65% 42% at 85% -5%, rgba(0, 229, 208, 0.22), transparent 70%),
+    radial-gradient(ellipse 55% 35% at 5% 25%, rgba(45, 212, 191, 0.15), transparent 70%);
   background-attachment: fixed;
 }
 html[data-theme="ocean-light"] body {
-  background-image: radial-gradient(ellipse 60% 40% at 80% -5%, rgba(6, 182, 212, 0.16), transparent 70%);
+  background-image:
+    radial-gradient(ellipse 65% 42% at 85% -5%, rgba(2, 141, 155, 0.16), transparent 70%),
+    radial-gradient(ellipse 55% 35% at 5% 25%, rgba(45, 212, 191, 0.12), transparent 70%);
   background-attachment: fixed;
 }
 
@@ -4238,6 +4243,14 @@ html[data-theme="snow"] .header {
   box-shadow: 0 1px 0 rgba(186, 230, 253, 0.25), 0 8px 30px rgba(125, 211, 252, 0.12);
 }
 
+html[data-theme="ocean"] .logo,
+html[data-theme="ocean-light"] .logo {
+  text-shadow: 0 0 16px rgba(0, 229, 208, 0.55);
+}
+html[data-theme="ocean"] .header {
+  box-shadow: 0 1px 0 rgba(0, 229, 208, 0.25), 0 8px 30px rgba(0, 229, 208, 0.12);
+}
+
 /* New Year Festive Candy-Cane Header */
 @keyframes candy-slide {
   from { background-position: 0 0; }
@@ -4256,6 +4269,21 @@ html[data-theme="newyear-light"] .header::after {
   background-size: 28.28px 100%;
   animation: candy-slide 1.2s linear infinite;
   pointer-events: none;
+}
+
+/* New Year Festive Caramel Candy-Cane Card Border */
+html[data-theme="newyear"] .product-card,
+html[data-theme="newyear-light"] .product-card {
+  border: 3px solid transparent !important;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box,
+              repeating-linear-gradient(135deg, #ff2d4f 0 10px, #ffffff 10px 20px) border-box !important;
+  box-shadow: 0 6px 20px rgba(255, 45, 79, 0.2) !important;
+}
+
+html[data-theme="newyear"] .product-card:hover,
+html[data-theme="newyear-light"] .product-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 14px 34px rgba(255, 45, 79, 0.38), 0 0 18px rgba(255, 255, 255, 0.4) !important;
 }
 
 /* Card hover glow with active theme accent */

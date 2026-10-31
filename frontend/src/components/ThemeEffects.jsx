@@ -5,6 +5,7 @@ const GREEN_COLORS = ["#3f9a2b", "#2f7d22", "#5cb83f", "#7acb55", "#287a3a", "#4
 const SAND_COLORS = ["#b8863b", "#c9974f", "#a8712a", "#d9a95f", "#9c6420"];
 const HEART_COLORS = ["#ff3d74", "#ff6b9b", "#ff8fb3", "#ffc2d6", "#e11d48", "#ff5c8a"];
 const AUTUMN_COLORS = ["#e8832a", "#c4501b", "#d9a21b", "#a63a17", "#b9772e", "#8f2d12"];
+const OCEAN_COLORS = ["0, 229, 208", "6, 182, 212", "56, 189, 248", "45, 212, 191", "125, 211, 252"];
 
 function rand(min, max) {
   return min + Math.random() * (max - min);
@@ -108,14 +109,19 @@ function spawn(kind, width, height, initial) {
     base.hue = Math.random() < 0.5 ? 0 : 1;
     base.spin = rand(-0.025, 0.025);
   } else if (kind === "ocean") {
-    base.size = rand(3, 13);
-    base.speed = -rand(0.5, 1.6);
-    base.drift = rand(-0.25, 0.25);
+    const isGlint = Math.random() < 0.4;
+    base.variant = isGlint ? 1 : 0;
+    base.size = isGlint ? rand(1.6, 3.2) : rand(3.5, 8);
+    base.speed = rand(-0.2, 0.2);
+    base.drift = rand(0.35, 1.1);
     base.sway = rand(15, 38);
     base.swayPhase = rand(0, Math.PI * 2);
-    base.alpha = rand(0.35, 0.85);
-    base.variant = Math.random() < 0.25 ? 1 : 0;
-    base.y = initial ? rand(0, height) : height + rand(10, 50);
+    base.pulse = rand(0, Math.PI * 2);
+    base.pulseSpeed = rand(0.015, 0.04);
+    base.hue = Math.floor(Math.random() * OCEAN_COLORS.length);
+    base.alpha = rand(0.4, 0.9);
+    base.y = initial ? rand(0, height) : rand(0, height);
+    base.x = initial ? rand(0, width) : -40;
   } else {
     // halloween: embers rise, bats cross the screen
     const bat = Math.random() < 0.18;
@@ -148,6 +154,8 @@ function drawPetal(ctx, p) {
   ctx.rotate(p.angle);
   ctx.scale(1, squash);
   ctx.globalAlpha = p.alpha;
+  ctx.shadowColor = "rgba(232, 82, 127, 0.4)";
+  ctx.shadowBlur = 4;
   ctx.fillStyle = SAKURA_COLORS[p.variant % SAKURA_COLORS.length];
   ctx.beginPath();
   ctx.moveTo(0, -s * 0.6);
@@ -278,6 +286,8 @@ function drawSnow(ctx, p) {
   ctx.save();
   ctx.translate(p.x, p.y);
   ctx.globalAlpha = p.alpha;
+  ctx.shadowColor = "rgba(2, 132, 199, 0.4)";
+  ctx.shadowBlur = Math.max(2, s * 0.9);
   if (p.variant === 1) {
     ctx.rotate(p.angle);
     ctx.strokeStyle = "#ffffff";
@@ -435,31 +445,60 @@ function drawEmber(ctx, p) {
   ctx.fill();
 }
 
-function drawBubble(ctx, p) {
+function drawOceanSparkle(ctx, p) {
   const s = p.size;
+  const pulse = 0.65 + 0.35 * Math.sin(p.pulse || 0);
+  const color = OCEAN_COLORS[(p.hue || 0) % OCEAN_COLORS.length];
   ctx.save();
   ctx.translate(p.x, p.y);
-  ctx.globalAlpha = p.alpha;
+  ctx.globalAlpha = p.alpha * pulse;
 
-  ctx.beginPath();
-  ctx.arc(0, 0, s, 0, Math.PI * 2);
-  ctx.fillStyle = p.variant === 1 ? "rgba(6, 182, 212, 0.16)" : "rgba(56, 189, 248, 0.1)";
-  ctx.fill();
-  ctx.strokeStyle = p.variant === 1 ? "rgba(6, 182, 212, 0.75)" : "rgba(125, 211, 252, 0.65)";
-  ctx.lineWidth = Math.max(0.8, s * 0.1);
-  ctx.stroke();
+  if (p.variant === 1) {
+    // Bioluminescent 4-point star glint
+    ctx.rotate(p.angle);
+    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 3.5);
+    glow.addColorStop(0, `rgba(${color}, 0.95)`);
+    glow.addColorStop(0.4, `rgba(${color}, 0.35)`);
+    glow.addColorStop(1, `rgba(${color}, 0)`);
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 3.5, 0, Math.PI * 2);
+    ctx.fill();
 
-  // Specular gleam (top left)
-  ctx.beginPath();
-  ctx.arc(-s * 0.35, -s * 0.35, Math.max(0.8, s * 0.22), 0, Math.PI * 2);
-  ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * 0.9})`;
-  ctx.fill();
+    // Star spikes
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 2.2);
+    ctx.quadraticCurveTo(0, 0, s * 0.45, 0);
+    ctx.quadraticCurveTo(0, 0, 0, s * 2.2);
+    ctx.quadraticCurveTo(0, 0, -s * 0.45, 0);
+    ctx.quadraticCurveTo(0, 0, 0, -s * 2.2);
+    ctx.fill();
 
-  // Subtle ambient lower rim
-  ctx.beginPath();
-  ctx.arc(s * 0.28, s * 0.28, Math.max(0.5, s * 0.12), 0, Math.PI * 2);
-  ctx.fillStyle = `rgba(186, 230, 253, ${p.alpha * 0.45})`;
-  ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-s * 2.2, 0);
+    ctx.quadraticCurveTo(0, 0, 0, s * 0.45);
+    ctx.quadraticCurveTo(0, 0, s * 2.2, 0);
+    ctx.quadraticCurveTo(0, 0, 0, -s * 0.45);
+    ctx.quadraticCurveTo(0, 0, -s * 2.2, 0);
+    ctx.fill();
+  } else {
+    // Soft undulating bioluminescent plankton orb
+    const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 2.2);
+    glow.addColorStop(0, `rgba(${color}, 0.9)`);
+    glow.addColorStop(0.4, `rgba(${color}, 0.45)`);
+    glow.addColorStop(1, `rgba(${color}, 0)`);
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 2.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bright core
+    ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.restore();
 }
@@ -542,6 +581,11 @@ export default function ThemeEffects({ theme, enabled = true }) {
         } else if (isBat) {
           p.x += p.drift * dt;
           p.y += (Math.sin(p.swayPhase * 2) * 0.6 + p.speed) * dt;
+        } else if (kind === "ocean") {
+          p.x += p.drift * dt;
+          p.y += (Math.sin(p.swayPhase) * 0.35 + p.speed) * dt;
+          p.pulse = (p.pulse || 0) + (p.pulseSpeed || 0.02) * dt;
+          p.angle += 0.012 * dt;
         } else {
           p.y += p.speed * dt;
           p.x += (p.drift * gust + Math.sin(p.swayPhase) * (p.sway / 80)) * dt;
@@ -554,13 +598,15 @@ export default function ThemeEffects({ theme, enabled = true }) {
         else if (kind === "love") drawHeart(ctx, p);
         else if (kind === "snow") drawSnow(ctx, p);
         else if (kind === "newyear") drawCandy(ctx, p);
-        else if (kind === "ocean") drawBubble(ctx, p);
+        else if (kind === "ocean") drawOceanSparkle(ctx, p);
         else if (isBat) drawBat(ctx, p);
         else drawEmber(ctx, p);
 
         const margin = 50;
         const gone = isBat
           ? p.x < -margin * 2 || p.x > width + margin * 2
+          : kind === "ocean"
+          ? p.x > width + margin || p.y < -margin || p.y > height + margin
           : p.speed >= 0
           ? p.y > height + margin
           : p.y < -margin;
@@ -592,7 +638,7 @@ export default function ThemeEffects({ theme, enabled = true }) {
         else if (kind === "love") drawHeart(ctx, p);
         else if (kind === "snow") drawSnow(ctx, p);
         else if (kind === "newyear") drawCandy(ctx, p);
-        else if (kind === "ocean") drawBubble(ctx, p);
+        else if (kind === "ocean") drawOceanSparkle(ctx, p);
         else if (p.variant !== 100) drawEmber(ctx, p);
       }
     };
