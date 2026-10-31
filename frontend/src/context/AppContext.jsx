@@ -113,6 +113,11 @@ function readLanguage() {
 export function AppProvider({ children }) {
   const [language, setLanguageState] = useState(readLanguage);
   const [theme, setTheme] = useState(() => getStorage("theme", "light") || "light");
+  const [themeEffects, setThemeEffects] = useState(() => getStorage("themeEffects", true));
+  const [blurPreviews, setBlurPreviews] = useState(() => getStorage("blurPreviews", false));
+  const [scrollTopButton, setScrollTopButton] = useState(() => getStorage("scrollTopButton", true));
+  const [defaultCurrency, setDefaultCurrency] = useState(() => getStorage("defaultCurrency", "USD"));
+  const [defaultSort, setDefaultSort] = useState(() => getStorage("defaultSort", "default"));
   const [user, setUserState] = useState(null);
   const [cart, setCartState] = useState([]);
   const [favorites, setFavoritesState] = useState([]);
@@ -238,12 +243,6 @@ export function AppProvider({ children }) {
       clearTimeout(timer);
     };
   }, [applyUser, loadUserData]);
-
-  const [themeEffects, setThemeEffects] = useState(() => getStorage("themeEffects", true));
-  const [blurPreviews, setBlurPreviews] = useState(() => getStorage("blurPreviews", false));
-  const [scrollTopButton, setScrollTopButton] = useState(() => getStorage("scrollTopButton", true));
-  const [defaultCurrency, setDefaultCurrency] = useState(() => getStorage("defaultCurrency", "USD"));
-  const [defaultSort, setDefaultSort] = useState(() => getStorage("defaultSort", "popular"));
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: light)");
