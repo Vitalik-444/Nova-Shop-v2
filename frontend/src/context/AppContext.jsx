@@ -304,6 +304,12 @@ export function AppProvider({ children }) {
     });
   }, []);
 
+  const setLanguage = useCallback(value => {
+    if (!I18N[value]) return;
+    localStorage.setItem("language", value);
+    setLanguageState(value);
+  }, []);
+
   const resetSettings = useCallback(() => {
     setLanguage("uk");
     setTheme("light");
@@ -329,12 +335,6 @@ export function AppProvider({ children }) {
         localStorage.removeItem(key);
       }
     });
-  }, []);
-
-  const setLanguage = useCallback(value => {
-    if (!I18N[value]) return;
-    localStorage.setItem("language", value);
-    setLanguageState(value);
   }, []);
 
   const persistCart = useCallback(next => {

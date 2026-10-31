@@ -480,7 +480,7 @@ export default function SettingsView() {
                     required
                     placeholder="••••••••"
                     value={securityForm.oldPassword}
-                    onChange={e => setProfileForm(c => ({ ...c, oldPassword: e.target.value }))}
+                    onChange={e => setSecurityForm(c => ({ ...c, oldPassword: e.target.value }))}
                   />
                 </div>
 
