@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { getProduct, getProductsCached, getProductReviews, submitProductReview } from "../api";
@@ -6,20 +6,34 @@ import Stars from "../components/Stars";
 import ProductRow from "../components/ProductRow";
 
 function RatingInput({ value, onSelect }) {
+  const { t } = useApp();
   const [hover, setHover] = useState(0);
+  const active = hover || value;
+  const labels = {
+    1: t("ratingPoor"),
+    2: t("ratingFair"),
+    3: t("ratingGood"),
+    4: t("ratingVeryGood"),
+    5: t("ratingExcellent")
+  };
+
   return (
-    <div className="nv-rating-input" onMouseLeave={() => setHover(0)}>
-      {[1, 2, 3, 4, 5].map(star => (
-        <button
-          type="button"
-          key={star}
-          onMouseEnter={() => setHover(star)}
-          onClick={() => onSelect(star)}
-          aria-label={`${star}`}
-        >
-          <i className={`${star <= (hover || value) ? "fa-solid" : "fa-regular"} fa-star`}></i>
-        </button>
-      ))}
+    <div className="nv-rating-input-wrap">
+      <div className="nv-rating-input" onMouseLeave={() => setHover(0)}>
+        {[1, 2, 3, 4, 5].map(star => (
+          <button
+            type="button"
+            key={star}
+            onMouseEnter={() => setHover(star)}
+            onClick={() => onSelect(star)}
+            aria-label={`${star}`}
+            className={star <= active ? "is-active" : ""}
+          >
+            <i className={`${star <= active ? "fa-solid" : "fa-regular"} fa-star`}></i>
+          </button>
+        ))}
+      </div>
+      {active > 0 && <span className="nv-rating-active-label">{labels[active]}</span>}
     </div>
   );
 }
@@ -28,6 +42,7 @@ function ReviewForm({ productId, myReview, onSaved }) {
   const { t, showToast } = useApp();
   const [rating, setRating] = useState(myReview ? myReview.rating : 0);
   const [comment, setComment] = useState(myReview ? myReview.comment : "");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setRating(myReview ? myReview.rating : 0);
@@ -42,7 +57,9 @@ function ReviewForm({ productId, myReview, onSaved }) {
       return;
     }
 
+    setSubmitting(true);
     const result = await submitProductReview(productId, rating, comment.trim());
+    setSubmitting(false);
 
     if (result.success) {
       showToast(t("reviewSaved"), "success");
@@ -54,15 +71,22 @@ function ReviewForm({ productId, myReview, onSaved }) {
 
   return (
     <form className="nv-review-form" onSubmit={onSubmit}>
-      <RatingInput value={rating} onSelect={setRating} />
-      <textarea
-        className="nv-textarea"
-        placeholder={t("reviewPlaceholder")}
-        value={comment}
-        onChange={event => setComment(event.target.value)}
-      ></textarea>
-      <button type="submit" className="nv-btn nv-btn-primary">
-        {myReview ? t("updateReview") : t("leaveReview")}
+      <div className="nv-form-group">
+        <label className="nv-form-label">{t("yourRating")}</label>
+        <RatingInput value={rating} onSelect={setRating} />
+      </div>
+      <div className="nv-form-group">
+        <textarea
+          className="nv-textarea"
+          placeholder={t("reviewPlaceholder")}
+          value={comment}
+          onChange={event => setComment(event.target.value)}
+          rows="4"
+        ></textarea>
+      </div>
+      <button type="submit" className="nv-btn nv-btn-primary" disabled={submitting}>
+        <i className={`fa-solid ${myReview ? "fa-check" : "fa-paper-plane"}`}></i>
+        <span>{submitting ? t("loading") : myReview ? t("updateReview") : t("leaveReview")}</span>
       </button>
     </form>
   );
@@ -169,6 +193,15 @@ export default function Product() {
     [t("availability"), product.availabilityStatus],
     [t("returnPolicy"), product.returnPolicy]
   ].filter(([, value]) => value);
+
+  const ratingDistribution = useMemo(() => {
+    const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(r => {
+      const rounded = Math.min(5, Math.max(1, Math.round(Number(r.rating)) || 5));
+      dist[rounded] = (dist[rounded] || 0) + 1;
+    });
+    return dist;
+  }, [reviews]);
 
   const onReviewSaved = () => {
     refreshProduct();
@@ -317,40 +350,110 @@ export default function Product() {
             )}
 
             {tab === "reviews" && (
-              <div className="nv-reviews">
-                <div className="nv-reviews-summary">
-                  <strong>{product.rating}</strong>
-                  <Stars value={product.rating} size="18px" />
-                  <span className="nv-muted">{product.reviewsCount || 0}</span>
-                </div>
-                <div className="nv-reviews-form">
-                  {user ? (
-                    <ReviewForm productId={productId} myReview={myReview} onSaved={onReviewSaved} />
-                  ) : (
-                    <p className="nv-muted">
-                      {t("loginToReview").replace(/<[^>]*>/g, "")} <Link to="/login" className="nv-link">{t("loginAction")}</Link>
-                    </p>
-                  )}
-                </div>
-                <div className="nv-reviews-list">
-                  {reviews.length === 0 ? (
-                    <p className="nv-muted">{t("noReviews")}</p>
-                  ) : (
-                    reviews.map((review, index) => (
-                      <div className="nv-review" key={review.id || index}>
-                        <div className="nv-review-head">
-                          <span className="nv-avatar">{String(review.userName || "?").charAt(0).toUpperCase()}</span>
-                          <div>
-                            <strong>{review.userName}</strong>
-                            <span className="nv-muted">
-                              {new Date(review.createdAt).toLocaleDateString(language === "en" ? "en-US" : "uk-UA")}
-                            </span>
-                          </div>
-                          <Stars value={review.rating} />
-                        </div>
-                        <p>{review.comment}</p>
+              <div className="nv-reviews-dashboard">
+                <div className="nv-reviews-sidebar">
+                  <div className="nv-reviews-card nv-reviews-rating-card">
+                    <h3 className="nv-card-heading">{t("rating")}</h3>
+                    <div className="nv-rating-hero">
+                      <div className="nv-rating-big">{Number(product.rating || 0).toFixed(1)}</div>
+                      <div className="nv-rating-hero-meta">
+                        <Stars value={product.rating} size="20px" />
+                        <span className="nv-rating-count-text">
+                          {product.reviewsCount ? t("basedOnReviews", { count: product.reviewsCount }) : t("noRatingsYet")}
+                        </span>
                       </div>
-                    ))
+                    </div>
+
+                    <div className="nv-rating-bars">
+                      {[5, 4, 3, 2, 1].map(stars => {
+                        const count = ratingDistribution[stars] || 0;
+                        const pct = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+                        return (
+                          <div className="nv-rating-bar-row" key={stars}>
+                            <span className="nv-rating-bar-num">{stars} <i className="fa-solid fa-star"></i></span>
+                            <div className="nv-rating-bar-track">
+                              <div className="nv-rating-bar-fill" style={{ width: `${pct}%` }}></div>
+                            </div>
+                            <span className="nv-rating-bar-qty">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="nv-reviews-card nv-reviews-form-card">
+                    <h3 className="nv-card-heading">
+                      <i className="fa-solid fa-pen-to-square"></i>
+                      <span>{myReview ? t("updateReview") : t("writeReview")}</span>
+                    </h3>
+                    {user ? (
+                      <ReviewForm productId={productId} myReview={myReview} onSaved={onReviewSaved} />
+                    ) : (
+                      <div className="nv-review-login-prompt">
+                        <div className="nv-prompt-icon">
+                          <i className="fa-solid fa-lock"></i>
+                        </div>
+                        <p>{t("loginToReview").replace(/<[^>]*>/g, "")}</p>
+                        <Link to="/login" className="nv-btn nv-btn-primary nv-btn-block">
+                          <i className="fa-solid fa-arrow-right-to-bracket"></i> {t("loginAction")}
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="nv-reviews-content">
+                  <div className="nv-reviews-content-header">
+                    <h3>{t("customerReviews")} <span className="nv-badge-pill">{reviews.length}</span></h3>
+                  </div>
+
+                  {reviews.length === 0 ? (
+                    <div className="nv-reviews-empty">
+                      <div className="nv-empty-icon-circle">
+                        <i className="fa-regular fa-comment-dots"></i>
+                      </div>
+                      <h4>{t("reviewsEmptyTitle")}</h4>
+                      <p>{t("reviewsEmptyDesc")}</p>
+                    </div>
+                  ) : (
+                    <div className="nv-reviews-feed">
+                      {reviews.map((review, index) => {
+                        const isOwn = myReview && (myReview.id === review.id || user?.id === review.userId);
+                        return (
+                          <div className={`nv-review-card ${isOwn ? "is-own" : ""}`} key={review.id || index}>
+                            <div className="nv-review-top">
+                              <div className="nv-review-user">
+                                <span className="nv-review-avatar">
+                                  {String(review.userName || "?").charAt(0).toUpperCase()}
+                                </span>
+                                <div>
+                                  <div className="nv-review-user-row">
+                                    <strong className="nv-review-username">{review.userName}</strong>
+                                    {isOwn && <span className="nv-own-badge">{t("yourReviewBadge")}</span>}
+                                    <span className="nv-verified-badge" title={t("verifiedBuyer")}>
+                                      <i className="fa-solid fa-circle-check"></i> {t("verifiedBuyer")}
+                                    </span>
+                                  </div>
+                                  <span className="nv-review-timestamp">
+                                    {new Date(review.createdAt).toLocaleDateString(language === "en" ? "en-US" : "uk-UA", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric"
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="nv-review-rating-badge">
+                                <Stars value={review.rating} size="15px" />
+                              </div>
+                            </div>
+                            <div className="nv-review-message">
+                              <p>{review.comment}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </div>

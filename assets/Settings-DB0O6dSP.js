@@ -1,0 +1,1 @@
+import{j as t}from"./index-COIOIR_H.js";import{S as s}from"./SettingsView-BrnhTebB.js";function n(){return t.jsx("div",{className:"container",style:{padding:"40px 0 60px"},children:t.jsx(s,{})})}export{n as default};

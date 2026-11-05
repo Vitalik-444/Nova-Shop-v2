@@ -192,6 +192,24 @@ export default function Catalog() {
 
   const filterPanel = (
     <>
+      <div className="nv-filter-block nv-filter-block-sort">
+        <h4>{t("sorting")}</h4>
+        <select
+          className="nv-select"
+          value={sort}
+          onChange={event => setSort(event.target.value)}
+          aria-label={t("sorting")}
+        >
+          <option value="default">{t("sortDefault")}</option>
+          <option value="popular">{t("sortPopular")}</option>
+          <option value="priceAsc">{t("sortPriceAsc")}</option>
+          <option value="priceDesc">{t("sortPriceDesc")}</option>
+          <option value="rating">{t("sortRating")}</option>
+          <option value="title">{t("sortTitle")}</option>
+          <option value="newest">{t("sortNewest")}</option>
+        </select>
+      </div>
+
       <div className="nv-filter-block">
         <h4>{t("categories")}</h4>
         <div className="nv-filter-cats">
@@ -271,7 +289,7 @@ export default function Catalog() {
           <span className="nv-found">{t("nvFound", { n: filtered.length })}</span>
           <div className="nv-toolbar-right">
             <select
-              className="nv-select"
+              className="nv-select nv-toolbar-sort"
               value={sort}
               onChange={event => setSort(event.target.value)}
               aria-label={t("sortDefault")}
