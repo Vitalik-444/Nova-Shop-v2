@@ -38,6 +38,22 @@ export function getProducts(limit = 200) {
   }, []);
 }
 
+let productsPromise = null;
+
+export function getProductsCached() {
+  if (!productsPromise) {
+    productsPromise = getProducts(500).then(list => {
+      if (!list.length) productsPromise = null;
+      return list;
+    });
+  }
+  return productsPromise;
+}
+
+export function resetProductsCache() {
+  productsPromise = null;
+}
+
 export function getProduct(id) {
   return safe(async () => {
     const data = await request(`${PRODUCTS_URL}?action=get&id=${id}`);

@@ -50,7 +50,7 @@ export default function ViewedProductsView() {
           </Link>
         </div>
       ) : (
-        <div className="products-grid viewed-grid">
+        <div className="nv-grid">
           {viewedProducts.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}

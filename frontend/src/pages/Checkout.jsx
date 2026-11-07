@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { createOrder } from "../api";
@@ -16,10 +16,25 @@ const EMPTY_FORM = {
   comment: ""
 };
 
+const DELIVERY = [
+  ["courier", "fa-truck"],
+  ["post", "fa-box"],
+  ["pickup", "fa-store"]
+];
+
+const PAYMENT = [
+  ["card", "cardOnline", "fa-credit-card"],
+  ["cash", "cashOnDelivery", "fa-money-bill-wave"],
+  ["invoice", "invoice", "fa-file-invoice"]
+];
+
 export default function Checkout() {
-  const { t, language, formatPrice, user, cart, clearCart, showToast, withLoader } = useApp();
+  const { t, tProduct, language, formatPrice, user, cart, clearCart, showToast, withLoader } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY_FORM);
+  const [step, setStep] = useState(1);
+  const [doneMessage, setDoneMessage] = useState("");
+  const formRef = useRef(null);
 
   useEffect(() => {
     if (!user) return;
@@ -33,6 +48,7 @@ export default function Checkout() {
     }));
   }, [user]);
 
+  const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const bind = field => ({
@@ -40,12 +56,32 @@ export default function Checkout() {
     onChange: event => setForm(current => ({ ...current, [field]: event.target.value }))
   });
 
-  const onSubmit = async event => {
-    event.preventDefault();
+  const invalidIn = target => {
+    if (!formRef.current) return null;
+    const fields = formRef.current.querySelectorAll(`[data-step="${target}"]`);
+    return Array.from(fields).find(el => !el.checkValidity()) || null;
+  };
 
+  const validate = target => {
+    const bad = invalidIn(target);
+    if (!bad) return true;
+    setStep(target);
+    setTimeout(() => bad.reportValidity(), 0);
+    return false;
+  };
+
+  const next = () => {
+    if (validate(step)) setStep(current => Math.min(3, current + 1));
+  };
+
+  const submitOrder = async () => {
     if (cart.length === 0) {
       showToast(t("cartEmpty"), "error");
       return;
+    }
+
+    for (const target of [1, 2, 3]) {
+      if (!validate(target)) return;
     }
 
     const customer = {
@@ -69,96 +105,201 @@ export default function Checkout() {
       return;
     }
 
+    const message = result.email_sent ? t("orderCreatedEmail") : t("orderCreatedNoEmail");
+    setDoneMessage(message);
     setForm(EMPTY_FORM);
     clearCart();
-    if (result.email_sent) {
-      showToast(t("orderCreatedEmail"));
-    } else {
-      showToast(t("orderCreatedNoEmail"), "error");
-    }
+    showToast(message, result.email_sent ? "success" : "error");
     setTimeout(() => navigate("/profile"), 1500);
   };
 
+  const onSubmit = event => {
+    event.preventDefault();
+    if (step < 3) next();
+    else submitOrder();
+  };
+
+  if (doneMessage) {
+    return (
+      <section className="nv-page">
+        <div className="container">
+          <div className="nv-empty nv-success">
+            <i className="fa-solid fa-circle-check"></i>
+            <h3>{doneMessage}</h3>
+            <Link to="/profile" className="nv-btn nv-btn-primary">{t("profile")}</Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (cart.length === 0) {
+    return (
+      <section className="nv-page">
+        <div className="container">
+          <h1 className="nv-page-title">{t("checkoutTitle")}</h1>
+          <div className="nv-empty">
+            <i className="fa-solid fa-cart-shopping"></i>
+            <h3>{t("cartEmpty")}</h3>
+            <p>{t("nvEmptyCartHint")}</p>
+            <Link to="/catalog" className="nv-btn nv-btn-primary">{t("nvToCatalog")}</Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const steps = [t("nvStep1"), t("nvStep2"), t("nvStep3")];
+
   return (
-    <section className="section">
+    <section className="nv-page">
       <div className="container">
-        <div className="auth-wrapper">
-          <form id="checkoutForm" className="auth-form checkout-form" onSubmit={onSubmit}>
-            <h1 className="title">{t("checkoutTitle")}</h1>
+        <h1 className="nv-page-title">{t("checkoutTitle")}</h1>
 
-            <div className="checkout-grid">
+        <ol className="nv-steps">
+          {steps.map((label, index) => {
+            const number = index + 1;
+            const state = number < step ? "done" : number === step ? "current" : "";
+            return (
+              <li key={label} className={state}>
+                <button type="button" disabled={number > step} onClick={() => setStep(number)}>
+                  <span>{number < step ? <i className="fa-solid fa-check"></i> : number}</span>
+                  {label}
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+
+        <div className="nv-checkout">
+          <form className="nv-checkout-form" ref={formRef} onSubmit={onSubmit} noValidate>
+            <div hidden={step !== 1}>
+              <h2>{t("nvStep1")}</h2>
+              <div className="nv-form-grid">
+                <div className="form-group">
+                  <label>{t("name")}</label>
+                  <input type="text" className="input" data-step="1" placeholder={t("enterName")} required {...bind("name")} />
+                </div>
+                <div className="form-group">
+                  <label>{t("surname")}</label>
+                  <input type="text" className="input" data-step="1" placeholder={t("enterSurname")} required {...bind("surname")} />
+                </div>
+                <div className="form-group">
+                  <label>{t("phone")}</label>
+                  <input type="tel" className="input" data-step="1" placeholder="+380 XX XXX XX XX" required {...bind("phone")} />
+                </div>
+                <div className="form-group">
+                  <label>Email</label>
+                  <input type="email" className="input" data-step="1" placeholder={t("enterEmail")} required {...bind("email")} />
+                </div>
+              </div>
+            </div>
+
+            <div hidden={step !== 2}>
+              <h2>{t("nvStep2")}</h2>
+              <div className="nv-options">
+                {DELIVERY.map(([value, icon]) => (
+                  <label className={`nv-option${form.delivery === value ? " active" : ""}`} key={value}>
+                    <input
+                      type="radio"
+                      name="delivery"
+                      data-step="2"
+                      value={value}
+                      required
+                      checked={form.delivery === value}
+                      onChange={() => setForm(current => ({ ...current, delivery: value }))}
+                    />
+                    <i className={`fa-solid ${icon}`}></i>
+                    <span>{t(value)}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="nv-form-grid">
+                <div className="form-group">
+                  <label>{t("city")}</label>
+                  <input type="text" className="input" data-step="2" placeholder={t("enterCity")} required {...bind("city")} />
+                </div>
+                <div className="form-group">
+                  <label>{t("postcode")}</label>
+                  <input type="text" className="input" data-step="2" placeholder={t("postIndex")} required {...bind("postcode")} />
+                </div>
+                <div className="form-group nv-wide">
+                  <label>{t("address")}</label>
+                  <input type="text" className="input" data-step="2" placeholder={t("fullAddress")} required {...bind("address")} />
+                </div>
+              </div>
+            </div>
+
+            <div hidden={step !== 3}>
+              <h2>{t("nvStep3")}</h2>
+              <div className="nv-options">
+                {PAYMENT.map(([value, label, icon]) => (
+                  <label className={`nv-option${form.payment === value ? " active" : ""}`} key={value}>
+                    <input
+                      type="radio"
+                      name="payment"
+                      data-step="3"
+                      value={value}
+                      required
+                      checked={form.payment === value}
+                      onChange={() => setForm(current => ({ ...current, payment: value }))}
+                    />
+                    <i className={`fa-solid ${icon}`}></i>
+                    <span>{t(label)}</span>
+                  </label>
+                ))}
+              </div>
               <div className="form-group">
-                <label>{t("name")}</label>
-                <input type="text" className="input" placeholder={t("enterName")} required {...bind("name")} />
-              </div>
-
-              <div className="form-group">
-                <label>{t("surname")}</label>
-                <input type="text" className="input" placeholder={t("enterSurname")} required {...bind("surname")} />
-              </div>
-
-              <div className="form-group">
-                <label>{t("phone")}</label>
-                <input type="tel" className="input" placeholder="+380 XX XXX XX XX" required {...bind("phone")} />
-              </div>
-
-              <div className="form-group">
-                <label>Email</label>
-                <input type="email" className="input" placeholder={t("enterEmail")} required {...bind("email")} />
-              </div>
-
-              <div className="form-group">
-                <label>{t("city")}</label>
-                <input type="text" className="input" placeholder={t("enterCity")} required {...bind("city")} />
-              </div>
-
-              <div className="form-group">
-                <label>{t("postcode")}</label>
-                <input type="text" className="input" placeholder={t("postIndex")} required {...bind("postcode")} />
-              </div>
-
-              <div className="form-group checkout-wide">
-                <label>{t("address")}</label>
-                <input type="text" className="input" placeholder={t("fullAddress")} required {...bind("address")} />
-              </div>
-
-              <div className="form-group">
-                <label>{t("deliveryMethod")}</label>
-                <select className="input" required {...bind("delivery")}>
-                  <option value="">{t("chooseDelivery")}</option>
-                  <option value="courier">{t("courier")}</option>
-                  <option value="post">{t("post")}</option>
-                  <option value="pickup">{t("pickup")}</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>{t("paymentMethod")}</label>
-                <select className="input" required {...bind("payment")}>
-                  <option value="">{t("choosePayment")}</option>
-                  <option value="card">{t("cardOnline")}</option>
-                  <option value="cash">{t("cashOnDelivery")}</option>
-                  <option value="invoice">{t("invoice")}</option>
-                </select>
-              </div>
-
-              <div className="form-group checkout-wide">
                 <label>{t("orderComment")}</label>
                 <textarea className="input textarea" placeholder={t("deliveryInfo")} {...bind("comment")}></textarea>
               </div>
             </div>
 
-            <div className="checkout-total">
-              <span>{t("orderSum")}</span>
-              <strong className="checkout-total-price">{formatPrice(totalPrice)}</strong>
+            <div className="nv-checkout-nav">
+              {step > 1 ? (
+                <button type="button" className="nv-btn nv-btn-ghost nv-btn-lg" onClick={() => setStep(step - 1)}>
+                  <i className="fa-solid fa-arrow-left"></i> {t("nvBack")}
+                </button>
+              ) : (
+                <Link to="/cart" className="nv-btn nv-btn-ghost nv-btn-lg">
+                  <i className="fa-solid fa-arrow-left"></i> {t("returnToCart")}
+                </Link>
+              )}
+              {step < 3 ? (
+                <button type="submit" className="nv-btn nv-btn-primary nv-btn-lg">
+                  {t("nvNext")} <i className="fa-solid fa-arrow-right"></i>
+                </button>
+              ) : (
+                <button type="submit" className="nv-btn nv-btn-primary nv-btn-lg">
+                  <i className="fa-solid fa-lock"></i> {t("confirmOrder")}
+                </button>
+              )}
             </div>
-
-            <button className="btn auth-btn">{t("confirmOrder")}</button>
-
-            <p className="auth-link">
-              <Link to="/cart">{t("returnToCart")}</Link>
-            </p>
           </form>
+
+          <aside className="nv-summary">
+            <h2>{t("nvYourItems")}</h2>
+            <div className="nv-summary-items">
+              {cart.map(item => (
+                <div className="nv-summary-item" key={item.id}>
+                  <img src={item.thumbnail} alt="" loading="lazy" />
+                  <div>
+                    <span>{tProduct(item)}</span>
+                    <small className="nv-muted">{item.quantity} {t("nvPcs")}</small>
+                  </div>
+                  <strong>{formatPrice(item.price * item.quantity)}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="nv-summary-row">
+              <span>{t("products")}</span>
+              <strong>{totalCount}</strong>
+            </div>
+            <div className="nv-summary-row nv-summary-total">
+              <span>{t("orderSum")}</span>
+              <strong>{formatPrice(totalPrice)}</strong>
+            </div>
+          </aside>
         </div>
       </div>
     </section>

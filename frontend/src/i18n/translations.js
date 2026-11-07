@@ -1,3 +1,5 @@
+import { EXTRA } from "./extra";
+
 export const I18N = {
     uk: {
         pageHome: "NovaShop | Головна",
@@ -792,5 +794,9 @@ export const I18N = {
         fillRequiredFields: "Please fill in all required fields"
     }
 };
+
+Object.keys(EXTRA).forEach(lang => {
+    Object.assign(I18N[lang], EXTRA[lang]);
+});
 
 export const DEFAULT_LANGUAGE = "uk";

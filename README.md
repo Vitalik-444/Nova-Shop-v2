@@ -171,7 +171,10 @@ All settings are read from `.env`.
 
 | Command                     | Description                                                                   |
 | --------------------------- | ----------------------------------------------------------------------------- |
-| `npm start`                 | Start the Express server                                                      |
+| `npm start`                 | Start the PostgreSQL container (Docker, waits until healthy) and the Express server |
+| `npm run start:app`         | Start only the Express server (without Docker)                                |
+| `npm run docker:up`         | Start only the PostgreSQL container                                           |
+| `npm run docker:down`       | Stop the Docker containers                                                    |
 | `npm run db:migrate`        | Apply pending migrations (demo data skipped)                                  |
 | `npm run db:migrate:demo`   | Apply migrations including demo seed data (`002`, `005`)                      |
 | `npm run db:import-mysql`   | Import data from the legacy MySQL database                                    |

@@ -1,76 +1,121 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useApp } from "../context/AppContext";
-import { getCategories, getProducts } from "../api";
+import { useApp, CURRENCY_RATES } from "../context/AppContext";
+import { getCategories, getProductsCached } from "../api";
+import { getStorage, setStorage } from "../utils/storage";
+import { getCategoryIcon } from "../utils/categoryIcons";
 import ProductCard from "../components/ProductCard";
-import CatalogTicker from "../components/CatalogTicker";
+import Skeletons from "../components/Skeleton";
 
 const PAGE_SIZE = 12;
-const MAX_PAGE_BUTTONS = 7;
+const RATING_STEPS = [4.5, 4, 3];
+
+const EMPTY_FILTERS = { min: "", max: "", rating: 0, seller: "", discount: false, stock: false };
 
 export default function Catalog() {
-  const { t, tProduct, tCategory, defaultSort } = useApp();
-  const [searchParams] = useSearchParams();
-  const urlQuery = searchParams.get("q") || "";
-  const urlCategory = searchParams.get("category") || "";
+  const { t, tProduct, tCategory, defaultSort, defaultCurrency } = useApp();
+  const [params, setParams] = useSearchParams();
+  const urlQuery = params.get("q") || "";
+  const category = params.get("category") || "all";
+  const brand = params.get("brand") || "";
+  const urlSort = params.get("sort") || "";
+  const urlDeals = params.get("deals") === "1";
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [category, setCategory] = useState(urlCategory || "all");
-  const [search, setSearch] = useState(urlQuery);
-  const [sort, setSort] = useState(() => defaultSort || "default");
-  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ ...EMPTY_FILTERS, discount: urlDeals });
+  const [sort, setSort] = useState(() => urlSort || defaultSort || "default");
+  const [view, setView] = useState(() => getStorage("catalog_view", "grid"));
+  const [visible, setVisible] = useState(PAGE_SIZE);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const rate = (CURRENCY_RATES[defaultCurrency] || CURRENCY_RATES.USD).rate;
+  const symbol = (CURRENCY_RATES[defaultCurrency] || CURRENCY_RATES.USD).symbol;
+
   useEffect(() => {
-    getProducts(200).then(setProducts);
+    getProductsCached().then(list => {
+      setProducts(list);
+      setLoading(false);
+    });
     getCategories().then(setCategories);
   }, []);
 
   useEffect(() => {
-    if (defaultSort) setSort(defaultSort);
-  }, [defaultSort]);
+    if (urlSort) setSort(urlSort);
+  }, [urlSort]);
 
   useEffect(() => {
-    if (urlCategory) setCategory(urlCategory);
-  }, [urlCategory]);
-
-  useEffect(() => {
-    setSearch(urlQuery);
-    setPage(1);
-  }, [urlQuery]);
+    setFilters(current => ({ ...current, discount: urlDeals }));
+  }, [urlDeals]);
 
   useEffect(() => {
     if (drawerOpen) {
       document.body.style.overflow = "hidden";
-      const handleKeyDown = event => {
+      const onKey = event => {
         if (event.key === "Escape") setDrawerOpen(false);
       };
-      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("keydown", onKey);
       return () => {
         document.body.style.overflow = "";
-        window.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("keydown", onKey);
       };
     }
+    return undefined;
   }, [drawerOpen]);
 
+  const setParam = (key, value) => {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setParams(next, { replace: true });
+  };
+
+  const changeFilter = (key, value) => setFilters(current => ({ ...current, [key]: value }));
+
+  const changeView = value => {
+    setView(value);
+    setStorage("catalog_view", value);
+  };
+
+  const matchesSearch = product => {
+    const value = urlQuery.trim().toLowerCase();
+    if (!value) return true;
+    const titleEn = (product.titleEn || product.title || "").toLowerCase();
+    const titleUk = (product.titleUk || "").toLowerCase();
+    const brandName = (product.brand || "").toLowerCase();
+    return titleEn.includes(value) || titleUk.includes(value) || brandName.includes(value) || tProduct(product).toLowerCase().includes(value);
+  };
+
+  const searched = useMemo(() => products.filter(matchesSearch), [products, urlQuery, tProduct]);
+
+  const categoryCounts = useMemo(() => {
+    const counts = {};
+    searched.forEach(product => {
+      counts[product.category] = (counts[product.category] || 0) + 1;
+    });
+    return counts;
+  }, [searched]);
+
+  const sellers = useMemo(() => [...new Set(searched.map(product => product.seller).filter(Boolean))].sort(), [searched]);
+
   const filtered = useMemo(() => {
-    let list = [...products];
+    const min = filters.min === "" ? null : Number(filters.min);
+    const max = filters.max === "" ? null : Number(filters.max);
+    let list = searched.filter(product => {
+      if (category !== "all" && product.category !== category) return false;
+      if (brand && product.brand !== brand) return false;
+      const converted = product.price * rate;
+      if (min !== null && converted < min) return false;
+      if (max !== null && converted > max) return false;
+      if (filters.rating && (product.rating || 0) < filters.rating) return false;
+      if (filters.seller && product.seller !== filters.seller) return false;
+      if (filters.discount && !(product.discountPercentage > 0)) return false;
+      if (filters.stock && !(product.stock > 0)) return false;
+      return true;
+    });
 
-    if (category !== "all") {
-      list = list.filter(product => product.category === category);
-    }
-
-    const value = search.trim().toLowerCase();
-    if (value) {
-      list = list.filter(product => {
-        const titleEn = (product.titleEn || product.title || "").toLowerCase();
-        const titleUk = (product.titleUk || "").toLowerCase();
-        const translated = tProduct(product).toLowerCase();
-        return titleEn.includes(value) || titleUk.includes(value) || translated.includes(value);
-      });
-    }
-
+    list = [...list];
     switch (sort) {
       case "priceAsc":
       case "price_asc":
@@ -95,164 +140,199 @@ export default function Catalog() {
       default:
         break;
     }
-
     return list;
-  }, [products, category, search, sort]);
+  }, [searched, category, brand, filters, sort, rate, tProduct]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  useEffect(() => {
+    setVisible(PAGE_SIZE);
+  }, [urlQuery, category, brand, filters, sort]);
 
-  let startPage = Math.max(1, currentPage - Math.floor(MAX_PAGE_BUTTONS / 2));
-  let endPage = startPage + MAX_PAGE_BUTTONS - 1;
-  if (endPage > totalPages) {
-    endPage = totalPages;
-    startPage = Math.max(1, endPage - MAX_PAGE_BUTTONS + 1);
+  const chips = [];
+  if (urlQuery) chips.push({ key: "q", label: `"${urlQuery}"`, clear: () => setParam("q", "") });
+  if (category !== "all") {
+    const found = categories.find(item => item.slug === category);
+    chips.push({ key: "category", label: tCategory(found || category), clear: () => setParam("category", "") });
   }
-  const pageNumbers = [];
-  for (let number = startPage; number <= endPage; number++) pageNumbers.push(number);
+  if (brand) chips.push({ key: "brand", label: brand, clear: () => setParam("brand", "") });
+  if (filters.min !== "" || filters.max !== "") {
+    chips.push({
+      key: "price",
+      label: `${filters.min !== "" ? filters.min : "0"} – ${filters.max !== "" ? filters.max : "∞"} ${symbol}`,
+      clear: () => setFilters(current => ({ ...current, min: "", max: "" }))
+    });
+  }
+  if (filters.rating) chips.push({ key: "rating", label: `★ ${t("nvRatingFrom", { n: filters.rating })}`, clear: () => changeFilter("rating", 0) });
+  if (filters.seller) chips.push({ key: "seller", label: filters.seller, clear: () => changeFilter("seller", "") });
+  if (filters.discount) chips.push({ key: "discount", label: t("nvOnlyDiscount"), clear: () => { changeFilter("discount", false); setParam("deals", ""); } });
+  if (filters.stock) chips.push({ key: "stock", label: t("nvOnlyStock"), clear: () => changeFilter("stock", false) });
 
-  return (
-    <section className="section">
-      <div className="container">
-        <h1 className="title">{t("catalogTitle")}</h1>
+  const resetAll = () => {
+    setFilters(EMPTY_FILTERS);
+    setParams(new URLSearchParams(), { replace: true });
+  };
 
-        <div className="catalog-top">
-          <button
-            type="button"
-            className="catalog-drawer-trigger"
-            onClick={() => setDrawerOpen(true)}
-          >
-            <i className="fa-solid fa-layer-group"></i>
-            <span>
-              {category === "all"
-                ? t("allCategories")
-                : tCategory(categories.find(item => item.slug === category) || category)}
-            </span>
-            <i className="fa-solid fa-chevron-right" style={{ fontSize: "12px", marginLeft: "auto" }}></i>
+  const shown = filtered.slice(0, visible);
+
+  const filterPanel = (
+    <>
+      <div className="nv-filter-block">
+        <h4>{t("categories")}</h4>
+        <div className="nv-filter-cats">
+          <button type="button" className={category === "all" ? "active" : ""} onClick={() => setParam("category", "")}>
+            <span><i className="fa-solid fa-boxes-stacked"></i> {t("allProducts")}</span>
+            <em>{searched.length}</em>
           </button>
+          {categories.filter(item => categoryCounts[item.slug]).map(item => (
+            <button type="button" key={item.slug} className={category === item.slug ? "active" : ""} onClick={() => setParam("category", item.slug)}>
+              <span><i className={`fa-solid ${getCategoryIcon(item.slug)}`}></i> {tCategory(item)}</span>
+              <em>{categoryCounts[item.slug]}</em>
+            </button>
+          ))}
+        </div>
+      </div>
 
-          <CatalogTicker />
-          <select
-            className="catalog-sort"
-            value={sort}
-            onChange={event => {
-              setSort(event.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="default">{t("sortDefault")}</option>
-            <option value="popular">{t("sortPopular")}</option>
-            <option value="priceAsc">{t("sortPriceAsc")}</option>
-            <option value="priceDesc">{t("sortPriceDesc")}</option>
-            <option value="rating">{t("sortRating")}</option>
-            <option value="title">{t("sortTitle")}</option>
-            <option value="newest">{t("sortNewest")}</option>
+      <div className="nv-filter-block">
+        <h4>{t("nvPrice")}, {symbol}</h4>
+        <div className="nv-price-inputs">
+          <input type="number" min="0" inputMode="numeric" placeholder={t("nvFrom")} value={filters.min} onChange={event => changeFilter("min", event.target.value)} />
+          <span>–</span>
+          <input type="number" min="0" inputMode="numeric" placeholder={t("nvTo")} value={filters.max} onChange={event => changeFilter("max", event.target.value)} />
+        </div>
+      </div>
+
+      <div className="nv-filter-block">
+        <h4>{t("nvRating")}</h4>
+        <div className="nv-rating-filter">
+          <button type="button" className={!filters.rating ? "active" : ""} onClick={() => changeFilter("rating", 0)}>{t("nvAny")}</button>
+          {RATING_STEPS.map(step => (
+            <button type="button" key={step} className={filters.rating === step ? "active" : ""} onClick={() => changeFilter("rating", step)}>
+              <i className="fa-solid fa-star"></i> {t("nvRatingFrom", { n: step })}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {sellers.length > 1 && (
+        <div className="nv-filter-block">
+          <h4>{t("nvSeller")}</h4>
+          <select className="nv-select" value={filters.seller} onChange={event => changeFilter("seller", event.target.value)}>
+            <option value="">{t("nvAny")}</option>
+            {sellers.map(name => <option key={name} value={name}>{name}</option>)}
           </select>
         </div>
+      )}
 
-        {search && (
-          <div className="catalog-search-query-bar">
-            <span>
-              {t("searchResultsFor")}: <strong>"{search}"</strong>
-            </span>
-            <button
-              type="button"
-              className="catalog-search-clear-btn"
-              onClick={() => {
-                setSearch("");
-                setPage(1);
-              }}
-              title={t("resetSearch")}
+      <div className="nv-filter-block">
+        <label className="nv-check">
+          <input type="checkbox" checked={filters.discount} onChange={event => changeFilter("discount", event.target.checked)} />
+          <span>{t("nvOnlyDiscount")}</span>
+        </label>
+        <label className="nv-check">
+          <input type="checkbox" checked={filters.stock} onChange={event => changeFilter("stock", event.target.checked)} />
+          <span>{t("nvOnlyStock")}</span>
+        </label>
+      </div>
+
+      {chips.length > 0 && (
+        <button type="button" className="nv-btn nv-btn-ghost nv-btn-block" onClick={resetAll}>
+          <i className="fa-solid fa-rotate-left"></i> {t("nvResetFilters")}
+        </button>
+      )}
+    </>
+  );
+
+  return (
+    <section className="nv-page">
+      <div className="container">
+        <h1 className="nv-page-title">{t("catalogTitle")}</h1>
+
+        <div className="nv-toolbar">
+          <button type="button" className="nv-btn nv-btn-ghost nv-filter-trigger" onClick={() => setDrawerOpen(true)}>
+            <i className="fa-solid fa-sliders"></i> {t("nvFilters")}
+            {chips.length > 0 && <span className="nv-count nv-count-inline">{chips.length}</span>}
+          </button>
+          <span className="nv-found">{t("nvFound", { n: filtered.length })}</span>
+          <div className="nv-toolbar-right">
+            <select
+              className="nv-select"
+              value={sort}
+              onChange={event => setSort(event.target.value)}
+              aria-label={t("sortDefault")}
             >
-              <i className="fa-solid fa-xmark"></i> {t("resetSearch")}
-            </button>
+              <option value="default">{t("sortDefault")}</option>
+              <option value="popular">{t("sortPopular")}</option>
+              <option value="priceAsc">{t("sortPriceAsc")}</option>
+              <option value="priceDesc">{t("sortPriceDesc")}</option>
+              <option value="rating">{t("sortRating")}</option>
+              <option value="title">{t("sortTitle")}</option>
+              <option value="newest">{t("sortNewest")}</option>
+            </select>
+            <div className="nv-view-toggle">
+              <button type="button" className={view === "grid" ? "active" : ""} onClick={() => changeView("grid")} aria-label={t("nvGrid")} title={t("nvGrid")}>
+                <i className="fa-solid fa-table-cells-large"></i>
+              </button>
+              <button type="button" className={view === "list" ? "active" : ""} onClick={() => changeView("list")} aria-label={t("nvList")} title={t("nvList")}>
+                <i className="fa-solid fa-list"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {chips.length > 0 && (
+          <div className="nv-chips">
+            {chips.map(chip => (
+              <button type="button" className="nv-chip" key={chip.key} onClick={chip.clear}>
+                {chip.label} <i className="fa-solid fa-xmark"></i>
+              </button>
+            ))}
+            <button type="button" className="nv-chip-reset" onClick={resetAll}>{t("nvResetFilters")}</button>
           </div>
         )}
 
-        <div className="catalog-layout">
-          <div
-            className={`catalog-drawer-backdrop${drawerOpen ? " active" : ""}`}
-            onClick={() => setDrawerOpen(false)}
-          />
-
-          <aside className={`catalog-sidebar${drawerOpen ? " active" : ""}`}>
-            <div className="catalog-drawer-header">
-              <h3>{t("categories")}</h3>
-              <button
-                type="button"
-                className="catalog-drawer-close"
-                onClick={() => setDrawerOpen(false)}
-                aria-label={t("close")}
-              >
-                &times;
+        <div className="nv-catalog">
+          <div className={`nv-drawer-backdrop${drawerOpen ? " active" : ""}`} onClick={() => setDrawerOpen(false)}></div>
+          <aside className={`nv-filters${drawerOpen ? " active" : ""}`}>
+            <div className="nv-filters-head">
+              <h3>{t("nvFilters")}</h3>
+              <button type="button" className="nv-action" onClick={() => setDrawerOpen(false)} aria-label={t("nvClose")}>
+                <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
-            <div className="categories-list">
-              <div
-                className={`category-filter${category === "all" ? " active" : ""}`}
-                onClick={() => {
-                  setCategory("all");
-                  setPage(1);
-                  setDrawerOpen(false);
-                }}
-              >
-                <i className="fa-solid fa-boxes-stacked" style={{ marginRight: "8px" }}></i>
-                {t("allProducts")}
-              </div>
-              {categories.map(item => (
-                <div
-                  key={item.slug}
-                  className={`category-filter${category === item.slug ? " active" : ""}`}
-                  onClick={() => {
-                    setCategory(item.slug);
-                    setPage(1);
-                    setDrawerOpen(false);
-                  }}
-                >
-                  {tCategory(item)}
-                </div>
-              ))}
-            </div>
+            {filterPanel}
+            <button type="button" className="nv-btn nv-btn-primary nv-btn-block nv-filters-apply" onClick={() => setDrawerOpen(false)}>
+              {t("nvFound", { n: filtered.length })}
+            </button>
           </aside>
 
-          <section className="catalog-content">
-            <div className="products-grid catalog-products">
-              {pageItems.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-
-            <div
-              className="catalog-pagination"
-              style={{ marginTop: "24px", display: "flex", gap: "8px", alignItems: "center" }}
-            >
-              <button
-                className="btn"
-                disabled={currentPage === 1}
-                onClick={() => setPage(Math.max(1, currentPage - 1))}
-              >
-                {t("back")}
-              </button>
-              {pageNumbers.map(number => (
-                <button
-                  key={number}
-                  className="btn"
-                  style={number === currentPage ? { background: "var(--green)", color: "#fff" } : undefined}
-                  onClick={() => setPage(number)}
-                >
-                  {number}
-                </button>
-              ))}
-              <button
-                className="btn"
-                disabled={currentPage === totalPages}
-                onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
-              >
-                {t("next")}
-              </button>
-            </div>
-          </section>
+          <div className="nv-catalog-main">
+            {loading ? (
+              <Skeletons count={PAGE_SIZE} layout={view} />
+            ) : filtered.length === 0 ? (
+              <div className="nv-empty">
+                <i className="fa-regular fa-face-frown"></i>
+                <h3>{t("nvNothing")}</h3>
+                <p>{t("nvNothingHint")}</p>
+                <button type="button" className="nv-btn nv-btn-primary" onClick={resetAll}>{t("nvResetFilters")}</button>
+              </div>
+            ) : (
+              <>
+                <div className={view === "list" ? "nv-list" : "nv-grid nv-grid-catalog"}>
+                  {shown.map(product => (
+                    <ProductCard key={product.id} product={product} layout={view} />
+                  ))}
+                </div>
+                <div className="nv-more">
+                  <span>{t("nvShown", { a: shown.length, b: filtered.length })}</span>
+                  <div className="nv-progress"><i style={{ width: `${(shown.length / filtered.length) * 100}%` }}></i></div>
+                  {shown.length < filtered.length && (
+                    <button type="button" className="nv-btn nv-btn-ghost nv-btn-lg" onClick={() => setVisible(value => value + PAGE_SIZE)}>
+                      {t("nvShowMore")}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </section>
