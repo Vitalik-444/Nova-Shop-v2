@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { addProduct, deleteMyProduct, getCategories, getMyProducts, getOrders } from "../api";
+import { addProduct, deleteMyProduct, getCategories, getMyProducts, getOrders, updateProductDiscount } from "../api";
 import SettingsView from "../components/SettingsView";
 import ViewedProductsView from "../components/ViewedProductsView";
 
@@ -157,6 +157,86 @@ function SellerModal({ open, onClose, onSaved }) {
   );
 }
 
+function DiscountModal({ product, onClose, onSaved }) {
+  const { t, showToast, formatPrice } = useApp();
+  const [discount, setDiscount] = useState(product ? String(product.discountPercentage || 0) : "0");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (product) setDiscount(String(product.discountPercentage || 0));
+  }, [product]);
+
+  if (!product) return null;
+
+  const numDiscount = Math.max(0, Math.min(100, parseFloat(discount) || 0));
+  const newPrice = numDiscount > 0 ? product.price * (1 - numDiscount / 100) : product.price;
+
+  const onSave = async () => {
+    if (isNaN(numDiscount) || numDiscount < 0 || numDiscount > 100) {
+      showToast(t("discountUpdateError"), "error");
+      return;
+    }
+    setSaving(true);
+    const result = await updateProductDiscount(product.id, numDiscount);
+    setSaving(false);
+
+    if (result && result.success) {
+      showToast(t("discountUpdated"));
+      onClose();
+      onSaved();
+    } else {
+      showToast((result && result.message) || t("discountUpdateError"), "error");
+    }
+  };
+
+  return (
+    <div
+      className="admin-modal-overlay active"
+      onClick={event => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="admin-modal" style={{ maxWidth: "440px" }}>
+        <h2>{t("editDiscount")}</h2>
+        <p style={{ margin: "0 0 16px", fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>
+          {product.title}
+        </p>
+
+        <label>{t("discount")}</label>
+        <input
+          type="number"
+          min="0"
+          max="100"
+          step="0.5"
+          value={discount}
+          onChange={e => setDiscount(e.target.value)}
+          autoFocus
+        />
+
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", padding: "12px 14px", borderRadius: "10px", margin: "14px 0", fontSize: "13px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+            <span style={{ color: "var(--gray)" }}>Базова ціна:</span>
+            <b>{formatPrice(product.price)}</b>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", color: numDiscount > 0 ? "var(--green)" : "inherit" }}>
+            <span>Ціна зі знижкою ({numDiscount}%):</span>
+            <b>{formatPrice(newPrice)}</b>
+          </div>
+        </div>
+
+        <div className="admin-modal-actions">
+          <button type="button" className="btn-outline" onClick={onClose} disabled={saving}>
+            {t("cancel")}
+          </button>
+          <button type="button" className="btn" onClick={onSave} disabled={saving}>
+            {saving ? t("loading") : t("save")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Profile({ defaultTab = "overview" }) {
   const { t, tProduct, tCategory, formatPrice, user, cart, favorites, viewedProducts, toggleTheme, logout, showToast } = useApp();
   const navigate = useNavigate();
@@ -167,6 +247,7 @@ export default function Profile({ defaultTab = "overview" }) {
   const [ordersCount, setOrdersCount] = useState(null);
   const [myProducts, setMyProducts] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [discountProduct, setDiscountProduct] = useState(null);
 
   useEffect(() => {
     if (tabFromUrl) {

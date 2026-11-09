@@ -111,6 +111,46 @@ router.all('/', async (req, res) => {
             return res.json({ success: true, message: 'Товар успішно видалено' });
         }
 
+        if (action === 'updateDiscount') {
+            if (!req.session.user_id) return res.status(401).json({ success: false, message: 'Необхідно авторизуватися' });
+            const { rows: users } = await db.query('SELECT id, role, full_name FROM users WHERE id = $1 LIMIT 1', [req.session.user_id]);
+            const user = users[0];
+            if (!user) return res.status(401).json({ success: false, message: 'Користувача не знайдено' });
+
+            const productId = parseInt(body.productId || body.id, 10) || 0;
+            const discountRaw = body.discount !== undefined ? body.discount : body.discountPercentage;
+            const discount = parseFloat(discountRaw);
+
+            if (!productId || isNaN(discount) || discount < 0 || discount > 100) {
+                return res.status(422).json({ success: false, message: 'Некоректний ID товару або розмір знижки (має бути від 0 до 100)' });
+            }
+
+            const isAdmin = user.role === 'admin';
+            try {
+                const { rows } = await db.query(
+                    'SELECT update_product_discount($1, $2, $3, $4) AS new_discount',
+                    [productId, discount, user.id, isAdmin]
+                );
+                return res.json({
+                    success: true,
+                    productId,
+                    discount: parseFloat(rows[0].new_discount),
+                    message: 'Знижку успішно оновлено'
+                });
+            } catch (e) {
+                if (e.code === '42501' || e.code === 'insufficient_privilege') {
+                    return res.status(403).json({ success: false, message: e.message });
+                }
+                if (e.code === '23514' || e.code === 'check_violation') {
+                    return res.status(422).json({ success: false, message: e.message });
+                }
+                if (e.code === 'P0002' || e.code === 'no_data_found') {
+                    return res.status(404).json({ success: false, message: e.message });
+                }
+                throw e;
+            }
+        }
+
         return res.status(404).json({ success: false, message: 'Unknown action' });
     } catch (error) {
         console.error('Products Error:', error);

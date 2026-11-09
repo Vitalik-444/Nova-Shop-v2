@@ -8,6 +8,7 @@ import ProductCard from "../components/ProductCard";
 import Skeletons from "../components/Skeleton";
 
 const PAGE_SIZE = 12;
+const MAX_PAGE_BUTTONS = 7;
 const RATING_STEPS = [4.5, 4, 3];
 
 const EMPTY_FILTERS = { min: "", max: "", rating: 0, seller: "", discount: false, stock: false };
@@ -27,7 +28,7 @@ export default function Catalog() {
   const [filters, setFilters] = useState({ ...EMPTY_FILTERS, discount: urlDeals });
   const [sort, setSort] = useState(() => urlSort || defaultSort || "default");
   const [view, setView] = useState(() => getStorage("catalog_view", "grid"));
-  const [visible, setVisible] = useState(PAGE_SIZE);
+  const [page, setPage] = useState(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const rate = (CURRENCY_RATES[defaultCurrency] || CURRENCY_RATES.USD).rate;
@@ -144,7 +145,7 @@ export default function Catalog() {
   }, [searched, category, brand, filters, sort, rate, tProduct]);
 
   useEffect(() => {
-    setVisible(PAGE_SIZE);
+    setPage(1);
   }, [urlQuery, category, brand, filters, sort]);
 
   const chips = [];
@@ -171,7 +172,23 @@ export default function Catalog() {
     setParams(new URLSearchParams(), { replace: true });
   };
 
-  const shown = filtered.slice(0, visible);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const shown = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  let startPage = Math.max(1, currentPage - Math.floor(MAX_PAGE_BUTTONS / 2));
+  let endPage = startPage + MAX_PAGE_BUTTONS - 1;
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - MAX_PAGE_BUTTONS + 1);
+  }
+  const pageNumbers = [];
+  for (let number = startPage; number <= endPage; number++) pageNumbers.push(number);
+
+  const goToPage = number => {
+    setPage(number);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const filterPanel = (
     <>
@@ -321,14 +338,22 @@ export default function Catalog() {
                     <ProductCard key={product.id} product={product} layout={view} />
                   ))}
                 </div>
-                <div className="nv-more">
-                  <span>{t("nvShown", { a: shown.length, b: filtered.length })}</span>
-                  <div className="nv-progress"><i style={{ width: `${(shown.length / filtered.length) * 100}%` }}></i></div>
-                  {shown.length < filtered.length && (
-                    <button type="button" className="nv-btn nv-btn-ghost nv-btn-lg" onClick={() => setVisible(value => value + PAGE_SIZE)}>
-                      {t("nvShowMore")}
+                <div className="catalog-pagination">
+                  <button className="btn" disabled={currentPage === 1} onClick={() => goToPage(Math.max(1, currentPage - 1))}>
+                    {t("back")}
+                  </button>
+                  {pageNumbers.map(number => (
+                    <button
+                      key={number}
+                      className={`btn${number === currentPage ? " active" : ""}`}
+                      onClick={() => goToPage(number)}
+                    >
+                      {number}
                     </button>
-                  )}
+                  ))}
+                  <button className="btn" disabled={currentPage === totalPages} onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}>
+                    {t("next")}
+                  </button>
                 </div>
               </>
             )}

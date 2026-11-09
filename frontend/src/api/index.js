@@ -83,6 +83,11 @@ export function deleteMyProduct(id) {
   return safe(() => send(`${PRODUCTS_URL}?action=deleteMyProduct`, { id }), { success: false, message: "Помилка мережі" });
 }
 
+export function updateProductDiscount(id, discount) {
+  resetProductsCache();
+  return safe(() => send(`${PRODUCTS_URL}?action=updateDiscount`, { id, discount }), { success: false, message: "Помилка мережі" });
+}
+
 export function getOrders() {
   return safe(async () => {
     const data = await request(`${ORDERS_URL}?action=list`);

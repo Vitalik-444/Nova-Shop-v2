@@ -156,7 +156,7 @@ export default function Home() {
       <section className="nv-section nv-section-tight">
         <div className="container">
           <div className="nv-cats">
-            {categories.slice(0, 12).map(item => (
+            {categories.map(item => (
               <Link to={`/catalog?category=${encodeURIComponent(item.slug)}`} className="nv-cat" key={item.slug}>
                 <span className="nv-cat-icon"><i className={`fa-solid ${getCategoryIcon(item.slug)}`}></i></span>
                 <span className="nv-cat-name">{tCategory(item)}</span>
