@@ -289,3 +289,29 @@ export function getCategoryTitle(categoryOrSlug, lang = "uk") {
     }
     return CATEGORY_TRANSLATIONS_EN[slug] || slug;
 }
+
+export function translateMetaText(text, lang = "uk") {
+    if (!text) return "";
+    if (lang === "en") return text;
+    const map = {
+        "Ships overnight": "Відправка наступного дня",
+        "Ships in 1-2 business days": "Відправка за 1-2 робочих дні",
+        "Ships in 3-5 business days": "Відправка за 3-5 робочих днів",
+        "Ships in 1 week": "Відправка протягом 1 тижня",
+        "Ships in 2 weeks": "Відправка протягом 2 тижнів",
+        "Ships in 1 month": "Відправка протягом 1 місяця",
+        "No warranty": "Гарантія 14 днів від магазину",
+        "1 year warranty": "1 рік офіційної гарантії",
+        "2 year warranty": "2 роки офіційної гарантії",
+        "3 year warranty": "3 роки офіційної гарантії",
+        "Lifetime warranty": "Довічна гарантія від виробника",
+        "60 days return policy": "60 днів гарантованого повернення",
+        "30 days return policy": "30 днів гарантованого повернення",
+        "14 days return policy": "14 днів гарантованого повернення",
+        "No return policy": "Повернення не передбачено",
+        "In Stock": "В наявності",
+        "Low Stock": "Закінчується",
+        "Out of Stock": "Немає в наявності"
+    };
+    return map[text] || text;
+}
