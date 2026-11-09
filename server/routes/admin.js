@@ -158,7 +158,7 @@ router.all('/', async (req, res) => {
                 await db.query('DELETE FROM products WHERE id = $1', [id]);
             } catch (e) {
                 // order_items.product_id → ON DELETE RESTRICT
-                if (e.code === FK_VIOLATION) {
+                if (e.code === FK_VIOLATION || e.code === '23001') {
                     return res.status(409).json({ success: false, message: 'Товар есть в оформленных заказах — удалить нельзя' });
                 }
                 throw e;
@@ -192,6 +192,34 @@ router.all('/', async (req, res) => {
                                                   THEN 'seller' ELSE 'buyer' END
                      WHERE id = $1 AND role = 'admin'`, [id]);
             }
+            return res.json({ success: true });
+        }
+
+        if (action === 'userDelete') {
+            const id = parseInt(body.id, 10) || 0;
+            if (!id) return res.status(422).json({ success: false, message: 'Некорректный id' });
+
+            if (id === req.session.user_id) {
+                return res.status(422).json({ success: false, message: 'Нельзя удалить самого себя' });
+            }
+
+            const { rows: userRows } = await db.query('SELECT id, full_name FROM users WHERE id = $1 LIMIT 1', [id]);
+            if (!userRows.length) {
+                return res.status(404).json({ success: false, message: 'Пользователь не найден' });
+            }
+
+            try {
+                await db.query('DELETE FROM users WHERE id = $1', [id]);
+            } catch (e) {
+                if (e.code === FK_VIOLATION || e.code === '23001') {
+                    return res.status(409).json({
+                        success: false,
+                        message: 'Нельзя удалить пользователя: за ним закреплены товары в каталоге'
+                    });
+                }
+                throw e;
+            }
+
             return res.json({ success: true });
         }
 

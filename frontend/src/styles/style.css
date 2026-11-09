@@ -1119,6 +1119,12 @@ button.action-btn {
 
 .admin-icon-btn{
 
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
     width:34px;
 
     height:34px;
@@ -1133,7 +1139,7 @@ button.action-btn {
 
     cursor:pointer;
 
-    transition:background .2s;
+    transition:background .2s, border-color .2s, color .2s, box-shadow .2s;
 
 }
 
@@ -1188,6 +1194,136 @@ button.action-btn {
     background:rgba(0,160,70,.15);
 
     color:var(--green);
+
+}
+
+.admin-role-user{
+
+    background:rgba(100,116,139,.12);
+
+    color:#64748b;
+
+}
+
+.admin-user-actions{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:flex-end;
+
+    gap:8px;
+
+}
+
+.admin-role-btn{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:7px;
+
+    padding:7px 14px;
+
+    border-radius:8px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    font-family:inherit;
+
+    cursor:pointer;
+
+    white-space:nowrap;
+
+    transition:all .2s ease;
+
+    border:1px solid transparent;
+
+}
+
+.admin-role-btn i{
+
+    font-size:12px;
+
+}
+
+.admin-role-btn-promote{
+
+    background:rgba(0,160,70,.12);
+
+    color:var(--green);
+
+    border-color:rgba(0,160,70,.28);
+
+}
+
+.admin-role-btn-promote:hover:not(:disabled){
+
+    background:var(--green);
+
+    color:#ffffff;
+
+    border-color:var(--green);
+
+    box-shadow:0 3px 10px rgba(0,160,70,.25);
+
+}
+
+.admin-role-btn-demote{
+
+    background:rgba(239,68,68,.1);
+
+    color:#ef4444;
+
+    border-color:rgba(239,68,68,.28);
+
+}
+
+.admin-role-btn-demote:hover:not(:disabled){
+
+    background:#ef4444;
+
+    color:#ffffff;
+
+    border-color:#ef4444;
+
+    box-shadow:0 3px 10px rgba(239,68,68,.25);
+
+}
+
+.admin-role-btn:disabled{
+
+    opacity:.4;
+
+    cursor:not-allowed;
+
+    box-shadow:none;
+
+}
+
+.admin-btn-danger{
+
+    color:#ef4444;
+
+    border-color:rgba(239,68,68,.28);
+
+}
+
+.admin-btn-danger:hover:not(:disabled){
+
+    background:#ef4444;
+
+    color:#ffffff;
+
+    border-color:#ef4444;
+
+    box-shadow:0 3px 10px rgba(239,68,68,.25);
 
 }
 

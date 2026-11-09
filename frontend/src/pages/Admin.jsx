@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import {
   adminDeleteProduct,
+  adminDeleteUser,
   adminGetOrders,
   adminGetUsers,
   adminSaveProduct,
@@ -318,6 +319,17 @@ function AdminUsers() {
     }
   };
 
+  const onDeleteUser = async user => {
+    if (!window.confirm(`${t("deleteUserConfirm")}\n\n${user.name} (${user.email})`)) return;
+    const result = await adminDeleteUser(user.id);
+    if (result.success) {
+      showToast(t("userDeleted"));
+      load();
+    } else {
+      showToast(result.message || t("userDeleteError"), "error");
+    }
+  };
+
   return (
     <div className="admin-panel">
       <div className="admin-table-wrap">
@@ -328,7 +340,7 @@ function AdminUsers() {
               <th>Email</th>
               <th>{t("role")}</th>
               <th>{t("registration")}</th>
-              <th></th>
+              <th style={{ textAlign: "right", minWidth: "220px" }}></th>
             </tr>
           </thead>
           <tbody>
@@ -340,25 +352,46 @@ function AdminUsers() {
             )}
             {users && users.map(user => {
               const isSelf = currentUser && currentUser.id === user.id;
+              const isAdmin = user.role === "admin";
               return (
                 <tr key={user.id}>
-                  <td>{user.name}</td>
+                  <td>
+                    <strong>{user.name}</strong>
+                    {isSelf && (
+                      <span className="admin-muted" style={{ marginLeft: "8px", fontSize: "12px" }}>
+                        ({t("tabProfile")})
+                      </span>
+                    )}
+                  </td>
                   <td>{user.email}</td>
                   <td>
                     <span className={`admin-role-badge admin-role-${user.role}`}>
-                      {user.role === "admin" ? t("admin") : t("user")}
+                      {isAdmin ? t("admin") : t("user")}
                     </span>
                   </td>
                   <td>{formatOrderDate(user.created_at, language)}</td>
                   <td>
-                    <button
-                      className="admin-icon-btn"
-                      disabled={isSelf}
-                      title={isSelf ? t("cannotChangeSelf") : undefined}
-                      onClick={() => onToggleRole(user)}
-                    >
-                      {user.role === "admin" ? t("removeRights") : t("makeAdmin")}
-                    </button>
+                    <div className="admin-user-actions">
+                      <button
+                        type="button"
+                        className={`admin-role-btn ${isAdmin ? "admin-role-btn-demote" : "admin-role-btn-promote"}`}
+                        disabled={isSelf}
+                        title={isSelf ? t("cannotChangeSelf") : undefined}
+                        onClick={() => onToggleRole(user)}
+                      >
+                        <i className={`fa-solid ${isAdmin ? "fa-user-minus" : "fa-shield-halved"}`}></i>
+                        <span>{isAdmin ? t("removeRights") : t("makeAdmin")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-icon-btn admin-btn-danger"
+                        disabled={isSelf}
+                        title={isSelf ? t("cannotDeleteSelf") : t("deleteUser")}
+                        onClick={() => onDeleteUser(user)}
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

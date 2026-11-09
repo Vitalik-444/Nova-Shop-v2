@@ -221,3 +221,7 @@ export async function adminGetUsers() {
 export function adminUpdateUserRole(id, role) {
   return adminPost("updateUserRole", { id, role });
 }
+
+export function adminDeleteUser(id) {
+  return adminPost("userDelete", { id });
+}
