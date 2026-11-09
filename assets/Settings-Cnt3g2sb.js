@@ -1,0 +1,1 @@
+import{j as t}from"./index-DOs-13vL.js";import{S as s}from"./SettingsView-C_AXkyuJ.js";function n(){return t.jsx("div",{className:"container",style:{padding:"40px 0 60px"},children:t.jsx(s,{})})}export{n as default};

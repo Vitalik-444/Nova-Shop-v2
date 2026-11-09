@@ -1942,11 +1942,6 @@
 @media (max-width: 1200px) {
   .nv-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .nv-grid-catalog { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .nv-product { grid-template-columns: minmax(0, 1fr) 320px; }
-  .nv-product-info { grid-column: 2; grid-row: 1; }
-  .nv-buybox { grid-column: 1 / -1; grid-row: 2; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; }
-  .nv-buybox > * { flex: 1 1 200px; }
-  .nv-perks { flex-basis: 100%; }
   .nv-adv { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -1974,13 +1969,6 @@
   .nv-filters-head { display: flex; }
   .nv-filters-apply { display: inline-flex; position: sticky; bottom: 0; }
 
-  .nv-product { grid-template-columns: 1fr; }
-  .nv-product-info, .nv-buybox { grid-column: auto; grid-row: auto; }
-  .nv-buybox { display: none; }
-  .nv-mobile-buy { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: var(--nv-panel); border-top: 1px solid var(--nv-line); box-shadow: 0 -8px 24px rgba(0, 0, 0, .15); }
-  .nv-mobile-buy > div { display: flex; flex-direction: column; }
-  .nv-mobile-buy strong { font-size: 20px; }
-  .nv-page { padding-bottom: 90px; }
   .nv-reviews-dashboard { grid-template-columns: 1fr; gap: 20px; }
 
   .nv-cart, .nv-checkout { grid-template-columns: 1fr; }
@@ -2008,8 +1996,6 @@
   .nv-adv { grid-template-columns: 1fr; }
   .nv-modal { grid-template-columns: 1fr; }
   .nv-modal-media { min-height: 220px; max-height: 260px; }
-  .nv-specs { grid-template-columns: 1fr; }
-  .nv-product-title { font-size: 24px; }
   .nv-steps button { padding: 10px; font-size: 13px; gap: 8px; }
   .nv-steps span { width: 24px; height: 24px; font-size: 12px; }
   .nv-form-grid { grid-template-columns: 1fr; }
