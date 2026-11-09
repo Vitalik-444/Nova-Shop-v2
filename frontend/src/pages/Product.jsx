@@ -118,6 +118,20 @@ export default function Product() {
     if (fresh) setProduct(fresh);
   }, [productId]);
 
+  const onReviewSaved = useCallback(() => {
+    refreshProduct();
+    loadReviews();
+  }, [refreshProduct, loadReviews]);
+
+  const ratingDistribution = useMemo(() => {
+    const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(r => {
+      const rounded = Math.min(5, Math.max(1, Math.round(Number(r.rating)) || 5));
+      dist[rounded] = (dist[rounded] || 0) + 1;
+    });
+    return dist;
+  }, [reviews]);
+
   useEffect(() => {
     let active = true;
     setProduct(null);
@@ -193,20 +207,6 @@ export default function Product() {
     [t("availability"), product.availabilityStatus],
     [t("returnPolicy"), product.returnPolicy]
   ].filter(([, value]) => value);
-
-  const ratingDistribution = useMemo(() => {
-    const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    reviews.forEach(r => {
-      const rounded = Math.min(5, Math.max(1, Math.round(Number(r.rating)) || 5));
-      dist[rounded] = (dist[rounded] || 0) + 1;
-    });
-    return dist;
-  }, [reviews]);
-
-  const onReviewSaved = () => {
-    refreshProduct();
-    loadReviews();
-  };
 
   const buyNow = async () => {
     await addToCart(product.id, quantity);

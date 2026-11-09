@@ -123,6 +123,7 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAllCats, setShowAllCats] = useState(false);
 
   useEffect(() => {
     getProductsCached().then(list => {
@@ -153,9 +154,15 @@ export default function Home() {
     <>
       <Hero products={products} />
 
-      <section className="nv-section nv-section-tight">
+      <section className="nv-section nv-section-tight nv-categories-section">
         <div className="container">
-          <div className="nv-cats">
+          <div className="nv-section-head">
+            <h2>{t("categories")}</h2>
+            <Link to="/catalog" className="nv-link">
+              {t("allCategories")} <i className="fa-solid fa-arrow-right"></i>
+            </Link>
+          </div>
+          <div className={`nv-cats-grid${showAllCats ? " is-expanded" : ""}`}>
             {categories.map(item => (
               <Link to={`/catalog?category=${encodeURIComponent(item.slug)}`} className="nv-cat" key={item.slug}>
                 <span className="nv-cat-icon"><i className={`fa-solid ${getCategoryIcon(item.slug)}`}></i></span>
@@ -163,6 +170,18 @@ export default function Home() {
               </Link>
             ))}
           </div>
+          {categories.length > 0 && (
+            <div className="nv-cats-toggle-wrap">
+              <button
+                type="button"
+                className="nv-cats-toggle-btn"
+                onClick={() => setShowAllCats(v => !v)}
+              >
+                <span>{showAllCats ? t("hideCategories") : t("showAllCategories", { count: categories.length })}</span>
+                <i className={`fa-solid ${showAllCats ? "fa-chevron-up" : "fa-chevron-down"}`}></i>
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
