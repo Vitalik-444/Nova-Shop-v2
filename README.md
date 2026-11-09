@@ -90,7 +90,7 @@ NovaShop provides a complete shopping flow — catalog browsing, favorites, cart
 │   ├── lib/mapping.js        # Mapping between frontend contract and DB schema
 │   └── routes/               # auth, products, cart, favorites, orders, reviews, admin
 ├── db/
-│   ├── sql/                  # Forward-only migrations 001–012
+│   ├── sql/                  # Forward-only migrations 001–016
 │   ├── docker/init/          # Creates the restricted app_user role on first start
 │   ├── queries/              # Lab queries (lab4, lab5, lab7)
 │   └── docs/                 # Schema diagram and reference SQL
@@ -188,11 +188,11 @@ All settings are read from `.env`.
 
 ### Schema
 
-The core schema consists of eight tables:
+The core schema consists of 12 tables:
 
-`users` · `categories` · `products` · `orders` · `order_items` · `user_cart` · `user_favorites` · `product_reviews`
+`users` · `categories` · `products` · `orders` · `order_items` · `user_cart` · `user_favorites` · `product_reviews` · `orders_audit` · `product_discounts_audit` · `user_viewed_products` · `schema_migrations`
 
-plus the audit table `orders_audit`, the views `order_totals` and `cart_summary`, the functions `product_reviews_history()` and `check_and_reserve_stock()`, and an `orders_audit_trg` trigger.
+plus the views `order_totals` and `cart_summary`, the stored functions `product_reviews_history()`, `check_and_reserve_stock()`, `update_product_discount()`, and triggers.
 
 Flexible storefront data (brand, SKU, thumbnail, gallery, discount, base rating, warranty, shipping and return policy) is stored in `products.attributes` (`jsonb`, GIN-indexed). Customer contact and delivery details are stored in `orders.customer_data` (`jsonb`).
 
@@ -204,20 +204,24 @@ Migrations live in `db/sql/` and follow a strict **forward-only** rule:
 - Each migration runs once, in its own transaction; state is tracked in the `schema_migrations` table.
 - An already-applied file must never be edited — every schema change is a **new** file.
 
-| Migration | Purpose                                   |
-| --------- | ----------------------------------------- |
-| `001`     | Initial schema                            |
-| `002`     | Demo seed data *(skipped by default)*     |
-| `003`     | Review uniqueness                         |
-| `004`     | Constraints                               |
-| `005`     | Bulk demo data *(skipped by default)*     |
-| `006`     | Views                                     |
-| `007`     | Functions                                 |
-| `008`     | Orders audit table and trigger            |
-| `009`     | Indexes                                   |
-| `010`     | Cart summary view                         |
-| `011`     | Foreign-key indexes                       |
-| `012`     | Storefront fields (`jsonb` columns)       |
+| Migration | Purpose                                                      |
+| --------- | ------------------------------------------------------------ |
+| `001`     | Initial schema                                               |
+| `002`     | Demo seed data *(skipped by default)*                        |
+| `003`     | Review uniqueness                                            |
+| `004`     | Constraints                                                  |
+| `005`     | Bulk demo data *(skipped by default)*                        |
+| `006`     | Views                                                        |
+| `007`     | Functions                                                    |
+| `008`     | Orders audit table and trigger                               |
+| `009`     | Indexes                                                      |
+| `010`     | Cart summary view                                            |
+| `011`     | Foreign-key indexes                                          |
+| `012`     | Storefront fields (`jsonb` columns)                          |
+| `013`     | User settings (`settings` jsonb column)                       |
+| `014`     | User viewed products (`user_viewed_products` table)          |
+| `015`     | Product discounts validation, audit and RBAC function        |
+| `016`     | Refine discounts RBAC by seller role (no hardcoded store names) |
 
 ### Least-privilege access
 

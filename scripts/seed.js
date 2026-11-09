@@ -7,7 +7,7 @@ const { Client } = require('pg');
 require('dotenv').config();
 
 const FILE = path.join(__dirname, '..', 'db', 'seed', 'data.sql');
-const DATA_TABLES = ['order_items', 'orders', 'product_reviews', 'user_cart', 'user_favorites', 'products', 'categories', 'users'];
+const DATA_TABLES = ['user_viewed_products', 'order_items', 'orders', 'product_reviews', 'user_cart', 'user_favorites', 'products', 'categories', 'users'];
 const SERIAL = ['users', 'categories', 'products', 'orders', 'product_reviews'];
 
 (async () => {

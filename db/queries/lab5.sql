@@ -6,7 +6,7 @@
 
 -- 1. Мета: скільки товарів продав кожен продавець за останній місяць? (сценарій 3)
 SELECT u.full_name AS seller_name,
-       count(oi.id) AS order_lines,
+       count(*) AS order_lines,
        sum(oi.quantity) AS units_sold,
        round(sum(oi.quantity * p.price)::numeric, 2) AS revenue
 FROM users u

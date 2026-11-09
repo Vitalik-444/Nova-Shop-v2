@@ -68,14 +68,12 @@ router.all('/', async (req, res) => {
             const ids = [...new Set(items.map(i => parseInt(i.id || i, 10)).filter(id => id > 0))];
 
             if (ids.length) {
-                for (const pid of ids) {
-                    await db.query(
-                        `INSERT INTO user_viewed_products (user_id, product_id, viewed_at)
-                         VALUES ($1, $2, now())
-                         ON CONFLICT (user_id, product_id) DO NOTHING`,
-                        [req.session.user_id, pid]
-                    );
-                }
+                await db.query(
+                    `INSERT INTO user_viewed_products (user_id, product_id, viewed_at)
+                     SELECT $1, unnest($2::int[]), now()
+                     ON CONFLICT (user_id, product_id) DO NOTHING`,
+                    [req.session.user_id, ids]
+                );
             }
 
             return res.json({ success: true });

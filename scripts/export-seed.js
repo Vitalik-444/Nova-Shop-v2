@@ -10,7 +10,8 @@ const OUT = path.join(__dirname, '..', 'db', 'seed', 'data.sql');
 const TABLES = [
     ['users', 'id'], ['categories', 'id'], ['products', 'id'], ['orders', 'id'],
     ['order_items', 'order_id, product_id'], ['product_reviews', 'id'],
-    ['user_cart', 'user_id, product_id'], ['user_favorites', 'user_id, product_id']
+    ['user_cart', 'user_id, product_id'], ['user_favorites', 'user_id, product_id'],
+    ['user_viewed_products', 'user_id, product_id']
 ];
 
 (async () => {

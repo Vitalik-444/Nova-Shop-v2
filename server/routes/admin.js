@@ -110,11 +110,14 @@ router.all('/', async (req, res) => {
             }
 
             const attrs = attributesFromBody(body);
+            const targetDiscount = attrs.discount_percentage;
+            delete attrs.discount_percentage; // щоб не перезаписувати jsonb напряму
 
             const savedId = await withTransaction(async client => {
                 const categoryId = await ensureCategory(client, category);
                 const sellerId = await ensureSeller(client, seller);
 
+                let currentId = id;
                 if (id > 0) {
                     // `||` зливає ключі: решта атрибутів (images, sku, гарантія…) лишається
                     const upd = await client.query(
@@ -122,16 +125,26 @@ router.all('/', async (req, res) => {
                                 description = $6, seller_id = $7, attributes = attributes || $8::jsonb
                          WHERE id = $1`,
                         [id, title, categoryId, price, stock, description, sellerId, attrs]);
-                    return upd.rowCount ? id : null;
+                    if (!upd.rowCount) return null;
+                } else {
+                    attrs.rating = 0;
+                    attrs.images = [];
+                    const ins = await client.query(
+                        `INSERT INTO products (seller_id, category_id, title, description, price, stock, attributes)
+                         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+                        [sellerId, categoryId, title, description, price, stock, attrs]);
+                    currentId = ins.rows[0].id;
                 }
 
-                attrs.rating = 0;
-                attrs.images = [];
-                const ins = await client.query(
-                    `INSERT INTO products (seller_id, category_id, title, description, price, stock, attributes)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-                    [sellerId, categoryId, title, description, price, stock, attrs]);
-                return ins.rows[0].id;
+                // Оновлення знижки суворо через функцію update_product_discount з валідацією та аудитом
+                if (targetDiscount !== undefined) {
+                    await client.query(
+                        'SELECT update_product_discount($1, $2, $3, true)',
+                        [currentId, targetDiscount, req.session.user_id]
+                    );
+                }
+
+                return currentId;
             });
 
             if (!savedId) return res.status(404).json({ success: false, message: 'Товар не найден' });

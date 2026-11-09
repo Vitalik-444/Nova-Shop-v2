@@ -56,7 +56,8 @@ router.all('/', async (req, res) => {
 
             const attrs = attributesFromBody(body);
             if (!attrs.thumbnail) attrs.thumbnail = 'images/banner.png';
-            attrs.discount_percentage = attrs.discount_percentage || 0;
+            const initialDiscount = attrs.discount_percentage || 0;
+            delete attrs.discount_percentage;
             attrs.rating = 0;
             attrs.images = [];
 
@@ -70,6 +71,10 @@ router.all('/', async (req, res) => {
                 await client.query(`UPDATE products SET attributes = attributes || $2::jsonb WHERE id = $1`, [newId, { sku: `SKU-${newId}` }]);
                 // той, хто виставляє товар, стає продавцем
                 if (user.role === 'buyer') await client.query(`UPDATE users SET role = 'seller' WHERE id = $1`, [user.id]);
+                // Встановлення знижки строго через функцію з перевіркою та аудитом
+                if (initialDiscount > 0) {
+                    await client.query('SELECT update_product_discount($1, $2, $3, $4)', [newId, initialDiscount, user.id, user.role === 'admin']);
+                }
                 return newId;
             });
 
