@@ -221,24 +221,50 @@ function AdminProducts() {
               <th>{t("category")}</th>
               <th>{t("seller")}</th>
               <th>{t("price")}</th>
+              <th>{t("discount")}</th>
               <th>{t("stock")}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {products === null && (
-              <tr><td colSpan="7">{t("loading")}</td></tr>
+              <tr><td colSpan="8">{t("loading")}</td></tr>
             )}
             {products && products.length === 0 && (
-              <tr><td colSpan="7">{t("noProducts")}</td></tr>
+              <tr><td colSpan="8">{t("noProducts")}</td></tr>
             )}
             {products && products.map(product => (
               <tr key={product.id}>
                 <td><img src={product.thumbnail} alt="" className="admin-thumb" /></td>
                 <td>{tProduct(product)}</td>
                 <td>{tCategory(product.category)}</td>
-                <td>{product.seller || "NovaShop"}</td>
+                <td>
+                  {product.seller === "NovaShop" || !product.seller ? (
+                    <span style={{ fontWeight: "600" }}>NovaShop</span>
+                  ) : (
+                    <span className="admin-role-badge admin-role-user" style={{ fontSize: "12px" }}>
+                      <i className="fa-solid fa-store" style={{ marginRight: "4px" }}></i>
+                      {product.seller}
+                    </span>
+                  )}
+                </td>
                 <td>{formatPrice(product.price)}</td>
+                <td>
+                  {Number(product.discountPercentage) > 0 ? (
+                    <span style={{
+                      background: "rgba(0, 160, 70, 0.12)",
+                      color: "var(--green)",
+                      fontWeight: "700",
+                      fontSize: "12px",
+                      padding: "2px 8px",
+                      borderRadius: "6px"
+                    }}>
+                      -{product.discountPercentage}%
+                    </span>
+                  ) : (
+                    <span style={{ color: "var(--gray)", fontSize: "12px" }}>—</span>
+                  )}
+                </td>
                 <td>{product.stock}</td>
                 <td className="admin-row-actions">
                   <button className="admin-icon-btn" title={t("edit")} onClick={() => setEditing(product)}>

@@ -238,7 +238,7 @@ function DiscountModal({ product, onClose, onSaved }) {
 }
 
 export default function Profile({ defaultTab = "overview" }) {
-  const { t, tProduct, tCategory, formatPrice, user, cart, favorites, viewedProducts, toggleTheme, logout, showToast } = useApp();
+  const { t, tProduct, tCategory, formatPrice, user, cart, favorites, viewedProducts, toggleTheme, theme, isDarkTheme, logout, showToast } = useApp();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get("tab");
@@ -409,7 +409,7 @@ export default function Profile({ defaultTab = "overview" }) {
                   </div>
 
                   <div className="profile-card">
-                    <i className="fa-solid fa-themeisle"></i>
+                    <i className={isDarkTheme(theme) ? "fa-solid fa-sun" : "fa-solid fa-moon"}></i>
                     <h3>{t("theme")}</h3>
                     <p>{t("lightDark")}</p>
                     <button className="btn-outline" id="profileTheme" onClick={toggleTheme}>{t("switchAction")}</button>
@@ -498,6 +498,29 @@ export default function Profile({ defaultTab = "overview" }) {
                               <i className="fa-solid fa-warehouse"></i> {product.stock} шт.
                             </div>
                           </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "6px 0 10px" }}>
+                            <span style={{
+                              background: Number(product.discountPercentage) > 0 ? "rgba(0, 160, 70, 0.12)" : "var(--background)",
+                              color: Number(product.discountPercentage) > 0 ? "var(--green)" : "var(--gray)",
+                              padding: "2px 8px",
+                              borderRadius: "6px",
+                              fontSize: "12px",
+                              fontWeight: "700",
+                              border: "1px solid var(--border)"
+                            }}>
+                              <i className="fa-solid fa-percent" style={{ fontSize: "10px", marginRight: "4px" }}></i>
+                              {Number(product.discountPercentage) > 0 ? `-${product.discountPercentage}%` : "0%"}
+                            </span>
+                            <button
+                              type="button"
+                              className="btn-outline"
+                              style={{ padding: "2px 8px", fontSize: "11px", height: "auto", cursor: "pointer", background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }}
+                              title={t("editDiscount")}
+                              onClick={() => setDiscountProduct(product)}
+                            >
+                              <i className="fa-solid fa-tag"></i> {t("editDiscount")}
+                            </button>
+                          </div>
                           <div className="seller-product-actions">
                             <Link to={`/product/${product.id}`} target="_blank" className="btn btn-outline btn-sm">
                               <i className="fa-regular fa-eye"></i> Переглянути
@@ -523,6 +546,11 @@ export default function Profile({ defaultTab = "overview" }) {
       </div>
 
       <SellerModal open={modalOpen} onClose={() => setModalOpen(false)} onSaved={loadMyProducts} />
+      <DiscountModal
+        product={discountProduct}
+        onClose={() => setDiscountProduct(null)}
+        onSaved={loadMyProducts}
+      />
     </section>
   );
 }

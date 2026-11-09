@@ -3,6 +3,7 @@ const { withTransaction } = require('../db');
 const {
     db, STATUS_TO_DB, STATUS_FROM_DB, roleToApi, ensureCategory, ensureSeller, attributesFromBody, FK_VIOLATION
 } = require('../lib/mapping');
+const { sendMail } = require('../mailer');
 const router = express.Router();
 
 async function requireAdmin(req, res, next) {
@@ -51,6 +52,47 @@ router.all('/', async (req, res) => {
             if (!orderId || !status) return res.status(422).json({ success: false, message: 'Некорректные данные' });
 
             await db.query('UPDATE orders SET status = $1 WHERE id = $2', [status, orderId]);
+
+            // Сповіщаємо покупця електронною поштою про зміну статусу
+            try {
+                const { rows: orderRows } = await db.query(
+                    `SELECT o.id, o.customer_data, u.email, u.full_name, u.settings
+                     FROM orders o
+                     LEFT JOIN users u ON u.id = o.buyer_id
+                     WHERE o.id = $1`, [orderId]
+                );
+                if (orderRows.length) {
+                    const ord = orderRows[0];
+                    const cust = ord.customer_data || {};
+                    const email = cust.email || ord.email;
+                    const name = cust.name ? `${cust.name} ${cust.surname || ''}`.trim() : (ord.full_name || 'Покупець');
+                    const lang = (cust.language || (ord.settings && ord.settings.language)) === 'en' ? 'en' : 'uk';
+
+                    if (email) {
+                        const statusTitles = {
+                            uk: { pending: 'Нове', paid: 'В обробці', shipped: 'Відправлено', delivered: 'Доставлено', cancelled: 'Скасовано' },
+                            en: { pending: 'New', paid: 'Processing', shipped: 'Shipped', delivered: 'Delivered', cancelled: 'Cancelled' }
+                        };
+                        const statusName = (statusTitles[lang] && statusTitles[lang][status]) || status;
+                        const subject = lang === 'en'
+                            ? `NovaShop: Order #${orderId} status changed to "${statusName}"`
+                            : `NovaShop: Статус замовлення №${orderId} змінено на «${statusName}»`;
+                        const html = `
+                            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e0e0e0;border-radius:12px;background:#ffffff;">
+                                <h2 style="color:#00A046;margin-top:0;">NovaShop</h2>
+                                <p style="font-size:15px;color:#333;">${lang === 'en' ? 'Hello' : 'Вітаємо'}, <b>${name}</b>!</p>
+                                <p style="font-size:15px;color:#333;">${lang === 'en' ? `The status of your order <strong>#${orderId}</strong> has been updated:` : `Статус вашого замовлення <strong>№${orderId}</strong> було змінено:`} <strong style="color:#00A046;font-size:16px;">${statusName}</strong>.</p>
+                                <hr style="border:none;border-top:1px solid #eee;margin:20px 0;" />
+                                <p style="font-size:12px;color:#888;">NovaShop Online Store</p>
+                            </div>
+                        `;
+                        sendMail(email, name, subject, html).catch(err => console.error(`Order #${orderId} status notification failed:`, err.message));
+                    }
+                }
+            } catch (notifyErr) {
+                console.error(`Order status notification error:`, notifyErr.message);
+            }
+
             return res.json({ success: true });
         }
 

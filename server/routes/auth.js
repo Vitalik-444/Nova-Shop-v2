@@ -51,6 +51,35 @@ router.all('/', async (req, res) => {
             const user = publicUser(created.rows[0]);
             req.session.user_id = user.id;
             req.session.role = user.role;
+
+            // Відправляємо вітальний лист
+            try {
+                const isEn = (user.settings && user.settings.language === 'en');
+                const subject = isEn ? 'Welcome to NovaShop!' : 'Ласкаво просимо до NovaShop!';
+                const html = isEn ? `
+                    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e0e0e0;border-radius:12px;background:#ffffff;">
+                        <h2 style="color:#00A046;margin-top:0;">Welcome to NovaShop!</h2>
+                        <p style="font-size:15px;color:#333;">Hello, <b>${user.name}</b>!</p>
+                        <p style="font-size:14px;line-height:1.6;color:#555;">Your account has been successfully created. You can now browse our catalog, make orders, and manage your profile.</p>
+                        <p style="font-size:14px;color:#333;">Your login email: <b>${user.email}</b></p>
+                        <hr style="border:none;border-top:1px solid #eee;margin:20px 0;" />
+                        <p style="font-size:12px;color:#888;">Thank you for choosing NovaShop!</p>
+                    </div>
+                ` : `
+                    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e0e0e0;border-radius:12px;background:#ffffff;">
+                        <h2 style="color:#00A046;margin-top:0;">Ласкаво просимо до NovaShop!</h2>
+                        <p style="font-size:15px;color:#333;">Вітаємо, <b>${user.name}</b>!</p>
+                        <p style="font-size:14px;line-height:1.6;color:#555;">Ваш акаунт успішно зареєстровано. Тепер ви можете замовляти товари, додавати їх в обране та налаштовувати свій профіль.</p>
+                        <p style="font-size:14px;color:#333;">Ваш логін: <b>${user.email}</b></p>
+                        <hr style="border:none;border-top:1px solid #eee;margin:20px 0;" />
+                        <p style="font-size:12px;color:#888;">Дякуємо, що ви з NovaShop!</p>
+                    </div>
+                `;
+                sendMail(user.email, user.name, subject, html).catch(err => console.error('Welcome email error:', err.message));
+            } catch (e) {
+                console.error('Welcome email failed:', e.message);
+            }
+
             return res.json({ success: true, user });
         }
 
