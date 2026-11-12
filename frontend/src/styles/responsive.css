@@ -199,6 +199,12 @@
     .profile-layout {
         grid-template-columns: 1fr;
         gap: 20px;
+        min-width: 0;
+    }
+
+    .profile-sidebar,
+    .profile-content {
+        min-width: 0;
     }
 
     .profile-sidebar {
