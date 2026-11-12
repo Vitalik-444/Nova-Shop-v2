@@ -41,6 +41,6 @@ app.use('/api/viewed.php', require('./server/routes/viewed'));
 app.use('/api/viewed', require('./server/routes/viewed'));
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${PORT}`);
 });

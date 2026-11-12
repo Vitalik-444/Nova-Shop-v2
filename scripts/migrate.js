@@ -71,7 +71,22 @@ async function ensureAppRole(client, dbName) {
     if (!connected) throw new Error("Не вдалося підключитися до бази даних після 15 спроб");
 
     try {
-        await ensureAppRole(client, dbName);
+        let hasAppUser = false;
+        try {
+            hasAppUser = (await client.query("SELECT 1 FROM pg_roles WHERE rolname = 'app_user'")).rowCount > 0;
+            if (!hasAppUser) {
+                try {
+                    await client.query("CREATE ROLE app_user");
+                    hasAppUser = true;
+                    console.log("  + створено роль app_user");
+                } catch {
+                    // Normal in cloud DBs where user doesn't have CREATEROLE
+                }
+            }
+        } catch {
+            // Cannot query pg_roles in some restricted environments
+        }
+
         await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
             version integer PRIMARY KEY, name text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())`);
         const applied = new Set((await client.query('SELECT version FROM schema_migrations')).rows.map(r => r.version));
@@ -84,9 +99,14 @@ async function ensureAppRole(client, dbName) {
             if (applied.has(version)) { console.log(`  = ${file} (вже застосовано)`); continue; }
             if (DEMO_DATA.has(version) && !withDemo) { console.log(`  - ${file} (демо-дані, пропущено; --with-demo-data щоб застосувати)`); continue; }
 
+            let sql = fs.readFileSync(path.join(SQL_DIR, file), 'utf8');
+            if (!hasAppUser) {
+                sql = sql.replace(/GRANT\s+[^;]+TO\s+app_user\s*;/gi, '-- [cloud-db] skipped grant to app_user');
+            }
+
             try {
                 await client.query('BEGIN');
-                await client.query(fs.readFileSync(path.join(SQL_DIR, file), 'utf8'));
+                await client.query(sql);
                 await client.query('INSERT INTO schema_migrations (version, name) VALUES ($1, $2)', [version, name]);
                 await client.query('COMMIT');
                 console.log(`  ✓ ${file}`);
