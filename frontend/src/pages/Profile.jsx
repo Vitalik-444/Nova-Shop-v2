@@ -99,7 +99,7 @@ function SellerModal({ open, onClose, onSaved }) {
           <label>{t("productTitle")}</label>
           <input type="text" required placeholder="Наприклад: Бездротові навушники Pro" {...bind("title")} />
 
-          <div className="admin-modal-row" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <div className="admin-modal-row admin-modal-row-2col">
             <div>
               <label>{t("productCategory")}</label>
               <input type="text" list="categoriesDatalist" required placeholder="smartphones, laptops..." {...bind("category")} />

@@ -9,6 +9,7 @@ import {
   getThemeVariant
 } from "../context/AppContext";
 import { updateProfile, updateSettings, changePassword, sendTestEmail } from "../api";
+import { isValidPhone } from "../utils/format";
 
 function swatchStyle(family, wantDark) {
   if (family === "system") {
@@ -27,7 +28,7 @@ function swatchStyle(family, wantDark) {
 
 function SwitchRow({ title, hint, checked, onChange }) {
   return (
-    <div className="settings-row">
+    <div className="settings-row settings-row-switch">
       <div className="settings-text">
         <strong>{title}</strong>
         <span>{hint}</span>
@@ -133,6 +134,11 @@ export default function SettingsView() {
     event.preventDefault();
     if (!profileForm.name.trim()) {
       showToast(t("fillRequiredFields"), "error");
+      return;
+    }
+
+    if (profileForm.phone.trim() && !isValidPhone(profileForm.phone)) {
+      showToast(t("invalidPhone"), "error");
       return;
     }
 
@@ -418,7 +424,7 @@ export default function SettingsView() {
                   />
                 </div>
 
-                <div className="admin-modal-row" style={{ gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div className="admin-modal-row admin-modal-row-2col settings-form-row">
                   <div className="settings-field">
                     <label>{t("phoneNumber")}</label>
                     <input
@@ -439,7 +445,7 @@ export default function SettingsView() {
                   </div>
                 </div>
 
-                <div className="admin-modal-row" style={{ gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div className="admin-modal-row admin-modal-row-2col settings-form-row">
                   <div className="settings-field">
                     <label>{t("defaultCity")}</label>
                     <input
@@ -484,7 +490,7 @@ export default function SettingsView() {
                   />
                 </div>
 
-                <div className="admin-modal-row" style={{ gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div className="admin-modal-row admin-modal-row-2col settings-form-row">
                   <div className="settings-field">
                     <label>{t("newPassword")}</label>
                     <input

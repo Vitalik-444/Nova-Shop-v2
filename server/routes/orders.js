@@ -128,6 +128,18 @@ router.all('/', async (req, res) => {
             if (!emailRegex.test(email)) return res.status(422).json({ success: false, message: 'Введите корректный Email' });
             customer.email = email;
 
+            const phone = (customer.phone || '').trim();
+            const phoneDigits = phone.replace(/\D/g, '');
+            const phoneRegex = /^\+?[\d\s\-()]{10,20}$/;
+            const isUkrainian380 = phoneDigits.startsWith('380') && phoneDigits.length === 12;
+            const isUkrainian0 = phoneDigits.startsWith('0') && phoneDigits.length === 10;
+            const isInternational = !phoneDigits.startsWith('380') && !phoneDigits.startsWith('0') && phoneDigits.length >= 10 && phoneDigits.length <= 15;
+
+            if (!phoneRegex.test(phone) || (!isUkrainian380 && !isUkrainian0 && !isInternational)) {
+                return res.status(422).json({ success: false, message: 'Введите корректный номер телефона (например: +380 XX XXX XX XX)' });
+            }
+            customer.phone = phone;
+
             // позиції з однаковим id зливаємо: у order_items первинний ключ (order_id, product_id)
             const qty = new Map();
             for (const item of rawItems) {

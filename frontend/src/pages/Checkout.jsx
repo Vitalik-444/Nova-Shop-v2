@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { createOrder } from "../api";
+import { isValidPhone, formatPhoneNumber } from "../utils/format";
 
 const EMPTY_FORM = {
   name: "",
@@ -34,7 +35,10 @@ export default function Checkout() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [step, setStep] = useState(1);
   const [doneMessage, setDoneMessage] = useState("");
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
   const formRef = useRef(null);
+  const phoneRef = useRef(null);
 
   useEffect(() => {
     if (!user) return;
@@ -56,6 +60,44 @@ export default function Checkout() {
     onChange: event => setForm(current => ({ ...current, [field]: event.target.value }))
   });
 
+  const handlePhoneChange = event => {
+    const val = event.target.value;
+    setForm(current => ({ ...current, phone: val }));
+    if (phoneTouched) {
+      if (!val.trim()) {
+        setPhoneError("");
+        if (phoneRef.current) phoneRef.current.setCustomValidity("");
+      } else if (!isValidPhone(val)) {
+        setPhoneError(t("invalidPhone"));
+        if (phoneRef.current) phoneRef.current.setCustomValidity(t("invalidPhone"));
+      } else {
+        setPhoneError("");
+        if (phoneRef.current) phoneRef.current.setCustomValidity("");
+      }
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    setPhoneTouched(true);
+    const val = form.phone.trim();
+    if (!val) {
+      setPhoneError("");
+      if (phoneRef.current) phoneRef.current.setCustomValidity("");
+      return;
+    }
+    if (!isValidPhone(val)) {
+      setPhoneError(t("invalidPhone"));
+      if (phoneRef.current) phoneRef.current.setCustomValidity(t("invalidPhone"));
+    } else {
+      setPhoneError("");
+      if (phoneRef.current) phoneRef.current.setCustomValidity("");
+      const formatted = formatPhoneNumber(val);
+      if (formatted !== form.phone) {
+        setForm(current => ({ ...current, phone: formatted }));
+      }
+    }
+  };
+
   const invalidIn = target => {
     if (!formRef.current) return null;
     const fields = formRef.current.querySelectorAll(`[data-step="${target}"]`);
@@ -63,6 +105,25 @@ export default function Checkout() {
   };
 
   const validate = target => {
+    if (target === 1) {
+      setPhoneTouched(true);
+      const isPhoneValid = isValidPhone(form.phone);
+      if (phoneRef.current) {
+        if (!form.phone.trim()) {
+          phoneRef.current.setCustomValidity("");
+        } else if (!isPhoneValid) {
+          phoneRef.current.setCustomValidity(t("invalidPhone"));
+        } else {
+          phoneRef.current.setCustomValidity("");
+        }
+      }
+      if (form.phone.trim() && !isPhoneValid) {
+        setPhoneError(t("invalidPhone"));
+      } else {
+        setPhoneError("");
+      }
+    }
+
     const bad = invalidIn(target);
     if (!bad) return true;
     setStep(target);
@@ -82,6 +143,19 @@ export default function Checkout() {
 
     for (const target of [1, 2, 3]) {
       if (!validate(target)) return;
+    }
+
+    if (!isValidPhone(form.phone)) {
+      setStep(1);
+      setPhoneTouched(true);
+      setPhoneError(t("invalidPhone"));
+      if (phoneRef.current) {
+        phoneRef.current.setCustomValidity(t("invalidPhone"));
+        phoneRef.current.focus();
+        phoneRef.current.reportValidity();
+      }
+      showToast(t("invalidPhone"), "error");
+      return;
     }
 
     const customer = {
@@ -186,7 +260,22 @@ export default function Checkout() {
                 </div>
                 <div className="form-group">
                   <label>{t("phone")}</label>
-                  <input type="tel" className="input" data-step="1" placeholder="+380 XX XXX XX XX" required {...bind("phone")} />
+                  <input
+                    ref={phoneRef}
+                    type="tel"
+                    className={`input${phoneError ? " input-error" : ""}`}
+                    data-step="1"
+                    placeholder="+380 XX XXX XX XX"
+                    required
+                    value={form.phone}
+                    onChange={handlePhoneChange}
+                    onBlur={handlePhoneBlur}
+                  />
+                  {phoneError ? (
+                    <span className="form-error-msg"><i className="fa-solid fa-circle-exclamation"></i> {phoneError}</span>
+                  ) : (
+                    <span className="form-hint-msg">{t("phoneHint")}</span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Email</label>
