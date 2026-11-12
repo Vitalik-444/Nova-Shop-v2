@@ -30,6 +30,13 @@ export default function Catalog() {
   const [view, setView] = useState(() => getStorage("catalog_view", "grid"));
   const [page, setPage] = useState(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const rate = (CURRENCY_RATES[defaultCurrency] || CURRENCY_RATES.USD).rate;
   const symbol = (CURRENCY_RATES[defaultCurrency] || CURRENCY_RATES.USD).symbol;
@@ -176,11 +183,12 @@ export default function Catalog() {
   const currentPage = Math.min(page, totalPages);
   const shown = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  let startPage = Math.max(1, currentPage - Math.floor(MAX_PAGE_BUTTONS / 2));
-  let endPage = startPage + MAX_PAGE_BUTTONS - 1;
+  const maxButtons = isMobile ? 3 : MAX_PAGE_BUTTONS;
+  let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+  let endPage = startPage + maxButtons - 1;
   if (endPage > totalPages) {
     endPage = totalPages;
-    startPage = Math.max(1, endPage - MAX_PAGE_BUTTONS + 1);
+    startPage = Math.max(1, endPage - maxButtons + 1);
   }
   const pageNumbers = [];
   for (let number = startPage; number <= endPage; number++) pageNumbers.push(number);
@@ -357,7 +365,7 @@ export default function Catalog() {
                   ))}
                 </div>
                 <div className="catalog-pagination">
-                  <button className="btn" disabled={currentPage === 1} onClick={() => goToPage(Math.max(1, currentPage - 1))}>
+                  <button className="btn btn-page-nav" disabled={currentPage === 1} onClick={() => goToPage(Math.max(1, currentPage - 1))}>
                     {t("back")}
                   </button>
                   {pageNumbers.map(number => (
@@ -369,7 +377,7 @@ export default function Catalog() {
                       {number}
                     </button>
                   ))}
-                  <button className="btn" disabled={currentPage === totalPages} onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}>
+                  <button className="btn btn-page-nav" disabled={currentPage === totalPages} onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}>
                     {t("next")}
                   </button>
                 </div>
