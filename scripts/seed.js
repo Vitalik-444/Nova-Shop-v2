@@ -17,10 +17,39 @@ const SERIAL = ['users', 'categories', 'products', 'orders', 'product_reviews'];
         ? { rejectUnauthorized: false }
         : false;
     const client = new Client({ connectionString, ssl });
-    await client.connect();
+
+    let connected = false;
+    for (let attempt = 1; attempt <= 15; attempt++) {
+        try {
+            await client.connect();
+            connected = true;
+            break;
+        } catch (err) {
+            console.log(`[Seed] Очікування бази даних (спроба ${attempt}/15): ${err.message}`);
+            await new Promise(r => setTimeout(r, 3000));
+        }
+    }
+    if (!connected) throw new Error("Не вдалося підключитися до бази даних після 15 спроб");
+
+    const isAuto = process.argv.includes('--auto');
+    const isTruncate = process.argv.includes('--truncate');
+
+    if (isAuto) {
+        try {
+            const check = await client.query("SELECT 1 FROM products WHERE title = 'Essence Mascara Lash Princess' LIMIT 1");
+            if (check.rowCount > 0) {
+                console.log("[Seed] База даних уже містить оригінальні товари NovaShop. Пропуск завантаження.");
+                await client.end();
+                return;
+            }
+        } catch (e) {
+            // Таблиці можуть бути порожніми або відсутніми
+        }
+    }
+
     try {
         await client.query('BEGIN');
-        if (process.argv.includes('--truncate')) {
+        if (isTruncate || isAuto) {
             await client.query(`TRUNCATE ${DATA_TABLES.join(', ')} RESTART IDENTITY CASCADE`);
         } else {
             for (const t of ['users', 'products', 'orders']) {
@@ -28,19 +57,23 @@ const SERIAL = ['users', 'categories', 'products', 'orders', 'product_reviews'];
                 if (n) throw new Error(`Таблица ${t} не пуста (${n} строк). Запустите с --truncate.`);
             }
         }
-        await client.query('ALTER TABLE orders DISABLE TRIGGER orders_audit_trg'); // историю не засоряем аудитом
+        try {
+            await client.query('ALTER TABLE orders DISABLE TRIGGER orders_audit_trg');
+        } catch {}
         await client.query(fs.readFileSync(FILE, 'utf8'));
-        await client.query('ALTER TABLE orders ENABLE TRIGGER orders_audit_trg');
+        try {
+            await client.query('ALTER TABLE orders ENABLE TRIGGER orders_audit_trg');
+        } catch {}
         for (const t of SERIAL) {
             await client.query(`SELECT setval(pg_get_serial_sequence('${t}','id'), COALESCE((SELECT max(id) FROM ${t}), 1), (SELECT max(id) FROM ${t}) IS NOT NULL)`);
         }
         await client.query('COMMIT');
         const counts = {};
         for (const t of DATA_TABLES) counts[t] = (await client.query(`SELECT count(*)::int AS n FROM ${t}`)).rows[0].n;
-        console.log('Загружено:', counts);
+        console.log('Успішно завантажено оригінальні дані NovaShop:', counts);
     } catch (e) {
         await client.query('ROLLBACK').catch(() => {});
-        console.error('Загрузка отменена:', e.message);
+        console.error('Завантаження відмінено:', e.message);
         process.exitCode = 1;
     } finally { await client.end(); }
 })().catch(e => { console.error(e.message); process.exit(1); });

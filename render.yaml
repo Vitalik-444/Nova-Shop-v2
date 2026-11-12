@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm install && npm run build
-    startCommand: node scripts/migrate.js --with-demo-data && npm start
+    startCommand: node scripts/migrate.js && node scripts/seed.js --auto && npm start
     envVars:
       - key: NODE_ENV
         value: production
