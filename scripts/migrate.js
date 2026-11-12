@@ -13,38 +13,49 @@ const FILE_RE = /^(\d{3})_([a-z0-9_]+)\.sql$/;
 // дані беруться з db/seed/data.sql (npm run db:seed), тому ці два файли за замовчуванням пропускаються.
 const DEMO_DATA = new Set([2, 5]);
 
-const url = process.env.DATABASE_MIGRATOR_URL || 'postgres://postgres:postgres@localhost:5433/myproject';
+const url = process.env.DATABASE_MIGRATOR_URL || process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5433/myproject';
 const withDemo = process.argv.includes('--with-demo-data');
+const isCloudDb = url && !url.includes('localhost') && !url.includes('127.0.0.1');
+const ssl = isCloudDb ? { rejectUnauthorized: false } : false;
 
 async function ensureDatabase() {
-    const target = new URL(url);
-    const dbName = decodeURIComponent(target.pathname.slice(1));
-    const admin = new URL(url); admin.pathname = '/postgres';
-    const c = new Client({ connectionString: admin.toString() });
-    await c.connect();
+    if (isCloudDb) return '';
     try {
-        const r = await c.query('SELECT 1 FROM pg_database WHERE datname = $1', [dbName]);
-        if (!r.rowCount) { await c.query(`CREATE DATABASE "${dbName.replace(/"/g, '""')}"`); console.log(`  + створено базу ${dbName}`); }
-    } finally { await c.end(); }
-    return dbName;
+        const target = new URL(url);
+        const dbName = decodeURIComponent(target.pathname.slice(1));
+        const admin = new URL(url); admin.pathname = '/postgres';
+        const c = new Client({ connectionString: admin.toString(), ssl });
+        await c.connect();
+        try {
+            const r = await c.query('SELECT 1 FROM pg_database WHERE datname = $1', [dbName]);
+            if (!r.rowCount) { await c.query(`CREATE DATABASE "${dbName.replace(/"/g, '""')}"`); console.log(`  + створено базу ${dbName}`); }
+        } finally { await c.end(); }
+        return dbName;
+    } catch (e) {
+        console.log('  i Пропущено створення бази (хмарна БД або немає суперюзера):', e.message);
+        return '';
+    }
 }
 
 async function ensureAppRole(client, dbName) {
-    // скрипт docker/init: CREATE ROLE + права на базу/схему + права по умолчанию для будущих таблиц.
-    const sql = fs.readFileSync(INIT_ROLE_SQL, 'utf8').replace(/DATABASE myproject/g, `DATABASE "${dbName}"`);
-    const exists = (await client.query(`SELECT 1 FROM pg_roles WHERE rolname = 'app_user'`)).rowCount > 0;
-    if (!exists) {
-        await client.query(sql);
-        console.log('  + створено роль app_user');
-        return;
+    if (isCloudDb) return;
+    try {
+        const sql = fs.readFileSync(INIT_ROLE_SQL, 'utf8').replace(/DATABASE myproject/g, `DATABASE "${dbName || 'myproject'}"`);
+        const exists = (await client.query(`SELECT 1 FROM pg_roles WHERE rolname = 'app_user'`)).rowCount > 0;
+        if (!exists) {
+            await client.query(sql);
+            console.log('  + створено роль app_user');
+            return;
+        }
+        await client.query(sql.replace(/^\s*CREATE ROLE[^;]*;/m, ''));
+    } catch (e) {
+        console.log('  i Пропущено створення ролі app_user (хмарна БД):', e.message);
     }
-    // роль уже є (кластер спільний з іншою базою) — GRANT-и ідемпотентні, тож видаємо права і в цій базі
-    await client.query(sql.replace(/^\s*CREATE ROLE[^;]*;/m, ''));
 }
 
 (async () => {
     const dbName = await ensureDatabase();
-    const client = new Client({ connectionString: url });
+    const client = new Client({ connectionString: url, ssl });
     await client.connect();
     try {
         await ensureAppRole(client, dbName);

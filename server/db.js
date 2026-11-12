@@ -1,9 +1,15 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Застосунок підключається від ролі app_user: читає й пише дані, але не змінює схему.
+// Застосунок підключається до бази даних (підтримує локальний Docker та хмарні Postgres: Render, Neon тощо)
+const connectionString = process.env.DATABASE_URL || 'postgres://app_user:app_pass@localhost:5433/myproject';
+const ssl = (connectionString && !connectionString.includes('localhost') && !connectionString.includes('127.0.0.1'))
+    ? { rejectUnauthorized: false }
+    : false;
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgres://app_user:app_pass@localhost:5433/myproject',
+    connectionString,
+    ssl,
     max: 10
 });
 

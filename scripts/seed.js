@@ -12,7 +12,11 @@ const SERIAL = ['users', 'categories', 'products', 'orders', 'product_reviews'];
 
 (async () => {
     if (!fs.existsSync(FILE)) throw new Error(`Нет файла ${path.relative(process.cwd(), FILE)}. Создайте его: npm run db:export-seed`);
-    const client = new Client({ connectionString: process.env.DATABASE_MIGRATOR_URL || 'postgres://postgres:postgres@localhost:5433/myproject' });
+    const connectionString = process.env.DATABASE_MIGRATOR_URL || process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5433/myproject';
+    const ssl = (connectionString && !connectionString.includes('localhost') && !connectionString.includes('127.0.0.1'))
+        ? { rejectUnauthorized: false }
+        : false;
+    const client = new Client({ connectionString, ssl });
     await client.connect();
     try {
         await client.query('BEGIN');

@@ -4,8 +4,11 @@
   "description": "NovaShop: React-фронтенд + Node.js/Express + PostgreSQL",
   "main": "server.js",
   "scripts": {
-    "start": "docker compose up -d --wait db && node server.js",
+    "start": "node server.js",
+    "start:docker": "docker compose up -d --wait db && node server.js",
     "start:app": "node server.js",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "deploy:init": "node scripts/migrate.js --with-demo-data && node scripts/seed.js",
     "docker:up": "docker compose up -d --wait db",
     "docker:down": "docker compose down",
     "db:migrate": "node scripts/migrate.js",
