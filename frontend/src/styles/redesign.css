@@ -1923,6 +1923,10 @@
 .nv-checkout-form h2 { font-size: 22px; margin-bottom: 20px; }
 .nv-checkout-form .form-group { margin-bottom: 18px; }
 .nv-checkout-form .input { background: var(--nv-bg); }
+.nv-checkout-form .input.input-error { border-color: #ef4444 !important; background-color: rgba(239, 68, 68, 0.05) !important; }
+.nv-checkout-form .input.input-error:focus { border-color: #ef4444 !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important; }
+.nv-checkout-form .form-error-msg { display: flex; align-items: center; gap: 6px; color: #ef4444; font-size: 12px; font-weight: 500; margin-top: 6px; line-height: 1.4; }
+.nv-checkout-form .form-hint-msg { display: block; color: var(--nv-muted); font-size: 12px; margin-top: 4px; line-height: 1.4; }
 .nv-checkout-form textarea.input { height: 120px; padding: 14px 18px; resize: vertical; }
 .nv-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
 .nv-wide { grid-column: 1 / -1; }

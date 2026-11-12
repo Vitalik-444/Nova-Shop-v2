@@ -309,13 +309,19 @@
         text-align: center;
     }
 
+    .section {
+        padding: 32px 0;
+    }
+
     .profile-layout {
         gap: 16px;
+        min-width: 0;
     }
 
     .profile-sidebar {
         padding: 20px 16px;
         border-radius: 16px;
+        min-width: 0;
     }
 
     .profile-avatar {
@@ -328,19 +334,30 @@
     .profile-sidebar h2 {
         font-size: 20px;
         margin-bottom: 4px;
+        word-break: break-word;
+        overflow-wrap: anywhere;
     }
 
     .profile-sidebar p {
         font-size: 14px;
         margin-bottom: 12px;
-        word-break: break-word;
+        word-break: break-all;
     }
 
     .profile-sidebar .logout-btn {
-        max-width: 220px;
+        width: 100%;
+        max-width: 240px;
         margin: 0 auto;
         padding: 10px 18px;
         font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .profile-content {
+        min-width: 0;
+        width: 100%;
     }
 
     .profile-content .title {
@@ -351,53 +368,327 @@
     .profile-tabs {
         gap: 6px;
         margin-bottom: 18px;
+        padding-bottom: 6px;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
     }
 
     .profile-tab-btn {
         padding: 8px 12px;
-        font-size: 14px;
+        font-size: 13px;
         gap: 6px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .profile-tab-badge {
+        font-size: 10px;
+        padding: 2px 6px;
     }
 
     .profile-cards {
-        grid-template-columns: 1fr;
-        gap: 12px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
     }
 
     .profile-card {
-        padding: 18px 16px;
+        padding: 14px 12px;
         border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-width: 0;
     }
 
     .profile-card i {
-        font-size: 28px;
-        margin-bottom: 10px;
+        font-size: 24px;
+        margin-bottom: 8px;
     }
 
     .profile-card h3 {
-        font-size: 16px;
+        font-size: 15px;
         margin-bottom: 4px;
+        word-break: break-word;
     }
 
     .profile-card p {
-        font-size: 13px;
+        font-size: 12px;
         margin-bottom: 10px;
+        word-break: break-word;
     }
 
-    .settings-panel {
+    .profile-card a,
+    .profile-card button {
+        font-size: 13px;
+    }
+
+    .profile-card .btn-outline {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 8px;
+    }
+
+    /* Seller Cabinet inside Profile */
+    .profile-seller-section {
         padding: 18px 14px;
         border-radius: 14px;
+        margin-top: 20px;
     }
 
     .seller-section-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+    }
+
+    .seller-section-header h2 {
+        font-size: 18px;
+        margin-bottom: 4px;
+    }
+
+    .seller-section-header .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 11px 16px;
     }
 
     .seller-products-container {
         grid-template-columns: 1fr;
         gap: 12px;
+    }
+
+    .seller-product-card {
+        border-radius: 12px;
+    }
+
+    .seller-product-img {
+        height: 140px;
+    }
+
+    .seller-product-body {
+        padding: 12px;
+    }
+
+    .seller-product-title {
+        font-size: 15px;
+        margin-bottom: 6px;
+    }
+
+    .seller-product-meta {
+        padding-top: 8px;
+    }
+
+    .seller-product-price {
+        font-size: 16px;
+    }
+
+    .seller-product-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .seller-product-actions .btn-sm {
+        flex: 1;
+        height: 38px;
+        padding: 0 12px;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .seller-product-actions .seller-btn-delete {
+        flex: 0 0 42px;
+        width: 42px;
+        height: 38px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .seller-empty-state {
+        padding: 24px 12px;
+    }
+
+    .seller-empty-state i {
+        font-size: 36px;
+        margin-bottom: 10px;
+    }
+
+    .seller-empty-state .btn {
+        width: 100%;
+        max-width: 240px;
+    }
+
+    /* Modals in Profile & Site */
+    .admin-modal-overlay {
+        padding: 12px;
+    }
+
+    .admin-modal {
+        padding: 18px 14px;
+        border-radius: 14px;
+        max-height: 92vh;
+        width: 100%;
+    }
+
+    .admin-modal h2 {
+        font-size: 18px;
+        margin-bottom: 14px;
+    }
+
+    .admin-modal-row,
+    .admin-modal-row-2col,
+    .settings-form-row {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .admin-modal-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .admin-modal-actions button,
+    .admin-modal-actions .btn,
+    .admin-modal-actions .btn-outline {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 16px;
+    }
+
+    /* Settings View in Profile */
+    .settings-panel {
+        padding: 16px 12px;
+        border-radius: 14px;
+    }
+
+    .settings-card {
+        padding: 16px 12px;
+        border-radius: 12px;
+    }
+
+    .settings-card h3 {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .settings-row {
+        padding: 12px 0;
+    }
+
+    .settings-row:not(.settings-row-switch):not(.column) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .settings-row.settings-row-switch {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .settings-text strong {
+        font-size: 13px;
+    }
+
+    .settings-text span {
+        font-size: 12px;
+    }
+
+    .settings-select {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .segmented {
+        display: flex;
+        width: 100%;
+    }
+
+    .segmented .segment {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+
+    .settings-form-actions {
+        margin-top: 16px;
+    }
+
+    .settings-form-actions button {
+        width: 100%;
+        justify-content: center;
+        padding: 11px 16px;
+    }
+
+    .settings-action-btn {
+        width: 100%;
+        text-align: center;
+        padding: 10px 14px;
+    }
+
+    .settings-reset {
+        width: 100%;
+        justify-content: center;
+        margin-top: 16px;
+    }
+
+    .settings-test-email-box {
+        padding: 12px;
+    }
+
+    .settings-test-email-box button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Viewed Products in Profile */
+    .viewed-products-view {
+        padding: 0 0 20px;
+    }
+
+    .viewed-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .viewed-title {
+        font-size: 20px;
+    }
+
+    .clear-history-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .viewed-empty {
+        padding: 30px 14px;
+        border-radius: 14px;
+    }
+
+    .viewed-empty p {
+        font-size: 14px;
+    }
+
+    .empty-cta-btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .cart-item {
@@ -454,10 +745,42 @@
     }
 }
 
+@media (max-width: 480px) {
+    .section {
+        padding: 24px 0;
+    }
+
+    .container {
+        width: min(100% - 20px, 1400px);
+    }
+
+    .profile-card h3 {
+        font-size: 14px;
+    }
+
+    .profile-card p {
+        font-size: 11px;
+    }
+}
+
 @media (max-width: 420px) {
     .categories-grid,
     .products-grid,
     .advantages-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 380px) {
+    .profile-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-sidebar {
+        padding: 16px 12px;
+    }
+
+    .profile-card {
+        padding: 12px 10px;
     }
 }
