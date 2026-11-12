@@ -56,7 +56,20 @@ async function ensureAppRole(client, dbName) {
 (async () => {
     const dbName = await ensureDatabase();
     const client = new Client({ connectionString: url, ssl });
-    await client.connect();
+
+    let connected = false;
+    for (let attempt = 1; attempt <= 15; attempt++) {
+        try {
+            await client.connect();
+            connected = true;
+            break;
+        } catch (err) {
+            console.log(`[Migrate] Очікування бази даних (спроба ${attempt}/15): ${err.message}`);
+            await new Promise(r => setTimeout(r, 3000));
+        }
+    }
+    if (!connected) throw new Error("Не вдалося підключитися до бази даних після 15 спроб");
+
     try {
         await ensureAppRole(client, dbName);
         await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (

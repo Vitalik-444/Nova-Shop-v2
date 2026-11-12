@@ -3,8 +3,8 @@ services:
     name: nova-shop
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build && node scripts/migrate.js --with-demo-data
-    startCommand: npm start
+    buildCommand: npm install && npm run build
+    startCommand: node scripts/migrate.js --with-demo-data && npm start
     envVars:
       - key: NODE_ENV
         value: production
