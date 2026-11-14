@@ -5,7 +5,7 @@ import { useApp } from "../context/AppContext";
 import Stars from "./Stars";
 
 export default function QuickView({ product, onClose }) {
-  const { t, tProduct, tCategory, formatPrice, addToCart, toggleFavorite, isFavorite } = useApp();
+  const { t, tProduct, tCategory, tDescription, formatPrice, addToCart, toggleFavorite, isFavorite } = useApp();
   const title = tProduct(product);
   const favorite = isFavorite(product.id);
   const oldPrice = product.discountPercentage
@@ -46,7 +46,7 @@ export default function QuickView({ product, onClose }) {
             <span className="nv-price">{formatPrice(product.price)}</span>
             {oldPrice && <span className="nv-old-price">{formatPrice(oldPrice)}</span>}
           </div>
-          <p className="nv-modal-text">{product.description}</p>
+          <p className="nv-modal-text">{tDescription(product)}</p>
           <span className={`nv-stock${inStock ? " ok" : " out"}`}>
             <i className={inStock ? "fa-solid fa-circle-check" : "fa-solid fa-circle-xmark"}></i>
             {inStock ? t("nvInStock") : t("nvOutOfStock")}

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { I18N, DEFAULT_LANGUAGE } from "../i18n/translations";
-import { getProductTitle, getCategoryTitle, PRODUCT_TRANSLATIONS_UK, CATEGORY_TRANSLATIONS_UK, CATEGORY_TRANSLATIONS_EN } from "../i18n/productTranslations";
+import { getProductTitle, getCategoryTitle, getProductDescription, PRODUCT_TRANSLATIONS_UK, CATEGORY_TRANSLATIONS_UK, CATEGORY_TRANSLATIONS_EN } from "../i18n/productTranslations";
 import * as api from "../api";
 import { getStorage, setStorage, removeStorage } from "../utils/storage";
 
@@ -174,6 +174,10 @@ export function AppProvider({ children }) {
 
   const tCategory = useCallback((categoryOrSlug) => {
     return getCategoryTitle(categoryOrSlug, language);
+  }, [language]);
+
+  const tDescription = useCallback((productOrDesc) => {
+    return getProductDescription(productOrDesc, language);
   }, [language]);
 
   const locale = language === "en" ? "en-US" : "uk-UA";
@@ -472,6 +476,7 @@ export function AppProvider({ children }) {
     t,
     tProduct,
     tCategory,
+    tDescription,
     formatPrice,
     theme,
     setTheme,
@@ -515,7 +520,7 @@ export function AppProvider({ children }) {
     register,
     logout
   }), [
-    language, setLanguage, t, tProduct, tCategory, formatPrice, theme, setTheme, toggleTheme, themeEffects, blurPreviews,
+    language, setLanguage, t, tProduct, tCategory, tDescription, formatPrice, theme, setTheme, toggleTheme, themeEffects, blurPreviews,
     scrollTopButton, defaultCurrency, defaultSort, resetSettings, clearSearchHistory, clearAppCache,
     user, updateUser, ready, splash, busy,
     withLoader, toast, showToast, cart, addToCart, changeQuantity, removeFromCart, clearCart,

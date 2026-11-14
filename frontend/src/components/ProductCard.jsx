@@ -5,7 +5,7 @@ import Stars from "./Stars";
 import QuickView from "./QuickView";
 
 export default function ProductCard({ product, variant = "full", layout = "grid" }) {
-  const { t, tProduct, tCategory, formatPrice, isFavorite, toggleFavorite, addToCart } = useApp();
+  const { t, tProduct, tCategory, tDescription, formatPrice, isFavorite, toggleFavorite, addToCart } = useApp();
   const [quick, setQuick] = useState(false);
   const favorite = variant === "favorite" || isFavorite(product.id);
   const title = tProduct(product);
@@ -45,7 +45,7 @@ export default function ProductCard({ product, variant = "full", layout = "grid"
           <span>{product.rating}</span>
           {product.reviewsCount ? <span className="nv-muted">({product.reviewsCount})</span> : null}
         </div>
-        {layout === "list" && product.description && <p className="nv-card-desc">{product.description}</p>}
+        {layout === "list" && product.description && <p className="nv-card-desc">{tDescription(product)}</p>}
         <div className="nv-card-bottom">
           <div className="nv-price-col">
             <span className="nv-price">{formatPrice(product.price)}</span>

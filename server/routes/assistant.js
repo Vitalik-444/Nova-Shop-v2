@@ -30,7 +30,10 @@ const STOP_WORDS = new Set([
     'какой', 'какая', 'какое', 'какие', 'кому', 'чему', 'меня', 'тебя', 'его',
     'пожалуйста', 'посоветуй', 'порекомендуй', 'ищу', 'купить', 'сколько', 'стоит',
     'привет', 'здравствуйте', 'хочу', 'найти', 'нужно', 'подскажи', 'дешевый', 'дорогой',
-    'хороший', 'лучший', 'скажи', 'покажи', 'или', 'чтобы', 'если', 'этот', 'эта', 'это', 'эти'
+    'хороший', 'лучший', 'скажи', 'покажи', 'или', 'чтобы', 'если', 'этот', 'эта', 'это', 'эти',
+    'the', 'and', 'for', 'with', 'from', 'about', 'what', 'which', 'who', 'how', 'where', 'when',
+    'why', 'can', 'you', 'please', 'tell', 'show', 'recommend', 'look', 'find', 'buy', 'cheap',
+    'expensive', 'good', 'best', 'this', 'that', 'these', 'those'
 ]);
 
 function cleanWords(text) {
@@ -73,7 +76,7 @@ async function getCategories() {
     }
 }
 
-async function search_products(queryText, category) {
+async function search_products(queryText, category, lang = 'uk') {
     const availableCategories = await getCategories();
     const words = cleanWords(queryText);
     const params = [];
@@ -91,7 +94,13 @@ async function search_products(queryText, category) {
         for (const word of words) {
             params.push(`%${word}%`);
             const idx = params.length;
-            const clause = `(LOWER(p.title) LIKE LOWER($${idx}) OR LOWER(COALESCE(p.category, c.name, '')) LIKE LOWER($${idx}) OR LOWER(COALESCE(p.description, '')) LIKE LOWER($${idx}))`;
+            const clause = `(
+                LOWER(p.title) LIKE LOWER($${idx}) 
+                OR LOWER(COALESCE(p.attributes->>'title_uk', '')) LIKE LOWER($${idx})
+                OR LOWER(COALESCE(p.category, c.name, '')) LIKE LOWER($${idx}) 
+                OR LOWER(COALESCE(p.description, '')) LIKE LOWER($${idx})
+                OR LOWER(COALESCE(p.attributes->>'description_uk', '')) LIKE LOWER($${idx})
+            )`;
             wordClauses.push(clause);
             scoreClauses.push(`CASE WHEN ${clause} THEN 1 ELSE 0 END`);
         }
@@ -105,9 +114,11 @@ async function search_products(queryText, category) {
         SELECT 
             p.id,
             p.title,
+            COALESCE(p.attributes->>'title_uk', '') AS title_uk,
             COALESCE(p.category, c.name, 'general') AS category,
             p.price,
             COALESCE(p.description, '') AS description,
+            COALESCE(p.attributes->>'description_uk', '') AS description_uk,
             COALESCE(ROUND(AVG(pr.rating)::numeric, 1), ROUND(COALESCE((p.attributes->>'rating')::numeric, 0), 1), 0) AS avg_rating,
             ${matchScoreSql} AS match_score
         FROM products p
@@ -125,17 +136,21 @@ async function search_products(queryText, category) {
             return {
                 products: [],
                 available_categories: availableCategories,
-                message: `На жаль, за вашим запитом товарів не знайдено. Будь ласка, уточніть запит або виберіть з доступних категорій: ${availableCategories.join(', ')}`
+                message: lang === 'en'
+                    ? `Unfortunately, no products were found for your query. Please clarify your request or choose from available categories: ${availableCategories.join(', ')}`
+                    : `На жаль, за вашим запитом товарів не знайдено. Будь ласка, уточніть запит або виберіть з доступних категорій: ${availableCategories.join(', ')}`
             };
         }
         return {
             products: rows.map(r => ({
                 id: r.id,
                 title: r.title,
+                title_uk: r.title_uk,
                 category: r.category,
                 price: Number(r.price),
                 avg_rating: Number(r.avg_rating),
-                description: r.description
+                description: r.description,
+                description_uk: r.description_uk
             })),
             count: rows.length
         };
@@ -143,7 +158,9 @@ async function search_products(queryText, category) {
         return {
             products: [],
             available_categories: availableCategories,
-            message: `На жаль, за вашим запитом товарів не знайдено. Будь ласка, уточніть запит або виберіть з доступних категорій: ${availableCategories.join(', ')}`
+            message: lang === 'en'
+                ? `Unfortunately, no products were found for your query. Please clarify your request or choose from available categories: ${availableCategories.join(', ')}`
+                : `На жаль, за вашим запитом товарів не знайдено. Будь ласка, уточніть запит або виберіть з доступних категорій: ${availableCategories.join(', ')}`
         };
     }
 }
@@ -347,38 +364,68 @@ router.get('/stats', requireAdmin, async (req, res) => {
 router.post('/', async (req, res) => {
     const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
 
+    const { message, history, language } = req.body || {};
+    const cleanMessage = (typeof message === 'string' ? message : '').trim().slice(0, 500);
+    const isEn = language === 'en' || (!language && !/[а-яіїєґ]/i.test(cleanMessage));
+
     if (!checkRateLimit(clientIp)) {
-        return res.status(429).json({ reply: 'Забагато запитів. Будь ласка, зачекайте хвилину і спробуйте знову.' });
+        return res.status(429).json({
+            reply: isEn
+                ? 'Too many requests. Please wait a minute and try again.'
+                : 'Забагато запитів. Будь ласка, зачекайте хвилину і спробуйте знову.'
+        });
     }
 
-    const { message, history } = req.body || {};
-
-    if (!message || typeof message !== 'string' || !message.trim()) {
-        return res.status(400).json({ reply: 'Будь ласка, введіть повідомлення.' });
+    if (!cleanMessage) {
+        return res.status(400).json({
+            reply: isEn
+                ? 'Please enter a message.'
+                : 'Будь ласка, введіть повідомлення.'
+        });
     }
-
-    const cleanMessage = message.trim().slice(0, 500);
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-        return res.status(500).json({ reply: 'Сервіс асистента тимчасово недоступний. Будь ласка, зверніться пізніше.' });
+        return res.status(500).json({
+            reply: isEn
+                ? 'The assistant service is temporarily unavailable. Please try again later.'
+                : 'Сервіс асистента тимчасово недоступний. Будь ласка, зверніться пізніше.'
+        });
     }
 
     const modelName = process.env.ASSISTANT_MODEL || 'gemini-3.1-flash-lite';
 
     try {
         const categoriesList = await getCategories();
-        const searchResult = await search_products(cleanMessage);
+        const searchResult = await search_products(cleanMessage, undefined, isEn ? 'en' : 'uk');
         const foundCount = searchResult.products ? searchResult.products.length : 0;
 
-        let productListText = searchResult.message || 'Товарів не знайдено.';
+        let productListText = searchResult.message || (isEn ? 'No products found.' : 'Товарів не знайдено.');
         if (searchResult.products && searchResult.products.length > 0) {
-            productListText = searchResult.products.map(p =>
-                `- ID ${p.id}: "${p.title}" | Категорія: ${p.category} | Ціна: $${Number(p.price).toFixed(2)} | Рейтинг: ${Number(p.avg_rating).toFixed(1)}/5`
-            ).join('\n');
+            productListText = searchResult.products.map(p => {
+                if (isEn) {
+                    return `- ID ${p.id}: "${p.title}" | Category: ${p.category} | Price: $${Number(p.price).toFixed(2)} | Rating: ${Number(p.avg_rating).toFixed(1)}/5 | Description: ${p.description || ''}`;
+                }
+                return `- ID ${p.id}: "${p.title_uk || p.title}" | Категорія: ${p.category} | Ціна: $${Number(p.price).toFixed(2)} | Рейтинг: ${Number(p.avg_rating).toFixed(1)}/5 | Опис: ${p.description_uk || p.description || ''}`;
+            }).join('\n');
         }
 
-        const systemInstruction = `Ти — Нова, віртуальний ІІ-асистент покупців сучасного інтернет-магазину NovaShop.
+        const systemInstruction = isEn
+            ? `You are Nova, the virtual AI assistant for customers of the modern NovaShop online store.
+Available categories: ${categoriesList.join(', ')}
+
+Rules:
+1. Answer in English, briefly, friendly, and politely.
+2. In your first message, always state that you are the AI assistant for NovaShop.
+3. In the category parameter of search_products, only use values from the list of available categories. If the query is vague, match it with suitable categories and call search multiple times if needed.
+4. Only recommend products from the provided list of found store products.
+5. Do not invent prices, stock, or features that are not in the list.
+6. If suitable products are not found, state this honestly and suggest choosing from the available categories.
+7. Politely decline questions that are not related to the store, products, and shopping, reminding the user that you are the NovaShop assistant.
+
+Found products for the query:
+${productListText}`
+            : `Ти — Нова, віртуальний ІІ-асистент покупців сучасного інтернет-магазину NovaShop.
 Доступні категорії: ${categoriesList.join(', ')}
 
 Правила:
@@ -438,7 +485,10 @@ ${productListText}`;
             }
         }
 
-        const reply = response.text ? response.text.trim() : 'Дякую за звернення! Чим ще можу вам допомогти?';
+        const defaultReply = isEn
+            ? 'Thank you for reaching out! How else can I help you today?'
+            : 'Дякую за звернення! Чим ще можу вам допомогти?';
+        const reply = response.text ? response.text.trim() : defaultReply;
 
         await logAssistantQuery(req.session?.user_id, clientIp, cleanMessage, reply, foundCount);
 
@@ -447,8 +497,12 @@ ${productListText}`;
         const isQuota = err.status === 429 || (err.message && (err.message.includes('429') || err.message.includes('quota') || err.message.includes('RESOURCE_EXHAUSTED')));
         const statusCode = isQuota ? 429 : 500;
         const reply = isQuota
-            ? 'Перевищено ліміт запитів до асистента. Будь ласка, зачекайте хвилинку і спробуйте знову.'
-            : 'Вибачте, сталася тимчасова помилка сервісу. Будь ласка, спробуйте пізніше.';
+            ? (isEn
+                ? 'Rate limit exceeded. Please wait a minute and try again.'
+                : 'Перевищено ліміт запитів до асистента. Будь ласка, зачекайте хвилинку і спробуйте знову.')
+            : (isEn
+                ? 'Sorry, a temporary service error occurred. Please try again later.'
+                : 'Вибачте, сталася тимчасова помилка сервісу. Будь ласка, спробуйте пізніше.');
 
         await logAssistantQuery(req.session?.user_id, clientIp, cleanMessage, reply, 0);
 

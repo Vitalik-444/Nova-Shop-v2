@@ -480,7 +480,7 @@ export default function Profile({ defaultTab = "overview" }) {
                       <div className="seller-product-card" key={product.id}>
                         <img
                           src={product.thumbnail || "images/banner.png"}
-                          alt={product.title}
+                          alt={tProduct(product)}
                           className="seller-product-img"
                           onError={event => {
                             event.currentTarget.src = "images/banner.png";

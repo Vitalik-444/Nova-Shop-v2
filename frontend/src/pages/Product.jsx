@@ -162,6 +162,7 @@ export default function Product() {
     t,
     tProduct,
     tCategory,
+    tDescription,
     formatPrice,
     user,
     language,
@@ -725,7 +726,7 @@ export default function Product() {
                     <i className="fa-solid fa-circle-info"></i>
                     <span>{t("nvDescription") || "Опис товару"}</span>
                   </h3>
-                  <p className="nv-desc-paragraph">{product.description}</p>
+                  <p className="nv-desc-paragraph">{tDescription(product)}</p>
                 </div>
 
                 <div className="nv-desc-highlight-cards">
