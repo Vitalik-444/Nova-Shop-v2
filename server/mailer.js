@@ -36,6 +36,62 @@ const transporter = new Proxy({}, {
 async function sendMail(to, name, subject, html) {
     dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
+    const brevoApiKey = process.env.BREVO_API_KEY;
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const fromName = process.env.SMTP_FROM_NAME || 'NovaShop';
+    const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER || 'nova444shop@gmail.com';
+
+    if (brevoApiKey) {
+        try {
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': brevoApiKey,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: fromName, email: fromEmail },
+                    to: [{ email: to, name: name || to }],
+                    subject: subject,
+                    htmlContent: html
+                })
+            });
+            const data = await response.json();
+            if (response.ok && (data.messageId || data.messageIds)) {
+                return { success: true, simulated: false, to, messageId: data.messageId || data.messageIds[0] };
+            }
+            console.warn('Brevo API error:', data);
+        } catch (apiErr) {
+            console.warn('Brevo request failed:', apiErr.message);
+        }
+    }
+
+    if (resendApiKey) {
+        try {
+            const response = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${resendApiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: `${fromName} <${fromEmail}>`,
+                    to: [to],
+                    subject: subject,
+                    html: html
+                })
+            });
+            const data = await response.json();
+            if (response.ok && data.id) {
+                return { success: true, simulated: false, to, messageId: data.id };
+            }
+            console.warn('Resend API error:', data);
+        } catch (apiErr) {
+            console.warn('Resend request failed:', apiErr.message);
+        }
+    }
+
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
 
@@ -45,7 +101,7 @@ async function sendMail(to, name, subject, html) {
     }
 
     const mailOptions = {
-        from: `"${process.env.SMTP_FROM_NAME || 'NovaShop'}" <${process.env.SMTP_FROM_EMAIL || user}>`,
+        from: `"${fromName}" <${fromEmail}>`,
         to: name ? `"${name}" <${to}>` : to,
         subject: subject,
         html: html
