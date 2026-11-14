@@ -166,9 +166,224 @@ router.all('/', async (req, res) => {
             return res.json({ success: true });
         }
 
+        if (action === 'statistics') {
+            // 1. Загальний огляд (KPI)
+            let overview = {
+                totalRevenue: 0,
+                totalOrders: 0,
+                deliveredOrders: 0,
+                shippedOrders: 0,
+                paidOrders: 0,
+                pendingOrders: 0,
+                cancelledOrders: 0,
+                averageOrderValue: 0,
+                totalUsers: 0,
+                newUsers30d: 0,
+                totalProducts: 0,
+                lowStockCount: 0
+            };
+            try {
+                const { rows: ovRows } = await db.query('SELECT * FROM admin_stats_overview LIMIT 1');
+                if (ovRows.length) {
+                    const r = ovRows[0];
+                    overview = {
+                        totalRevenue: Number(r.total_revenue || 0),
+                        totalOrders: Number(r.total_orders || 0),
+                        deliveredOrders: Number(r.delivered_orders || 0),
+                        shippedOrders: Number(r.shipped_orders || 0),
+                        paidOrders: Number(r.paid_orders || 0),
+                        pendingOrders: Number(r.pending_orders || 0),
+                        cancelledOrders: Number(r.cancelled_orders || 0),
+                        averageOrderValue: Number(r.average_order_value || 0),
+                        totalUsers: Number(r.total_users || 0),
+                        newUsers30d: Number(r.new_users_30d || 0),
+                        totalProducts: Number(r.total_products || 0),
+                        lowStockCount: Number(r.low_stock_count || 0)
+                    };
+                }
+            } catch {
+                // Прямий розрахунок, якщо представлення ще не застосовано
+                const { rows: revRows } = await db.query(`
+                    SELECT 
+                        COALESCE(SUM(CASE WHEN o.status <> 'cancelled' THEN oi.quantity * oi.price_at_purchase ELSE 0 END), 0) AS total_revenue,
+                        COUNT(DISTINCT o.id) AS total_orders,
+                        COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.id END) AS delivered_orders,
+                        COUNT(DISTINCT CASE WHEN o.status = 'shipped' THEN o.id END) AS shipped_orders,
+                        COUNT(DISTINCT CASE WHEN o.status = 'paid' THEN o.id END) AS paid_orders,
+                        COUNT(DISTINCT CASE WHEN o.status = 'pending' THEN o.id END) AS pending_orders,
+                        COUNT(DISTINCT CASE WHEN o.status = 'cancelled' THEN o.id END) AS cancelled_orders
+                    FROM orders o
+                    LEFT JOIN order_items oi ON oi.order_id = o.id
+                `);
+                const r = revRows[0] || {};
+                const { rows: uRows } = await db.query(`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE created_at >= now() - INTERVAL '30 days') AS new_30d FROM users`);
+                const { rows: pRows } = await db.query(`SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE stock <= 5) AS low_stock FROM products`);
+                const validOrders = Number(r.total_orders || 0) - Number(r.cancelled_orders || 0);
+                const totRev = Number(r.total_revenue || 0);
+                overview = {
+                    totalRevenue: totRev,
+                    totalOrders: Number(r.total_orders || 0),
+                    deliveredOrders: Number(r.delivered_orders || 0),
+                    shippedOrders: Number(r.shipped_orders || 0),
+                    paidOrders: Number(r.paid_orders || 0),
+                    pendingOrders: Number(r.pending_orders || 0),
+                    cancelledOrders: Number(r.cancelled_orders || 0),
+                    averageOrderValue: validOrders > 0 ? Number((totRev / validOrders).toFixed(2)) : 0,
+                    totalUsers: Number(uRows[0]?.total || 0),
+                    newUsers30d: Number(uRows[0]?.new_30d || 0),
+                    totalProducts: Number(pRows[0]?.total || 0),
+                    lowStockCount: Number(pRows[0]?.low_stock || 0)
+                };
+            }
+
+            // 2. Продажі по днях за останні 30 днів
+            const { rows: dailyRows } = await db.query(`
+                SELECT 
+                    to_char(date_trunc('day', o.created_at), 'YYYY-MM-DD') AS day,
+                    to_char(date_trunc('day', o.created_at), 'DD.MM') AS short_day,
+                    COUNT(DISTINCT o.id)::int AS orders_count,
+                    COALESCE(SUM(oi.quantity * oi.price_at_purchase), 0)::numeric(12,2) AS revenue
+                FROM orders o
+                JOIN order_items oi ON oi.order_id = o.id
+                WHERE o.status <> 'cancelled' AND o.created_at >= now() - INTERVAL '30 days'
+                GROUP BY date_trunc('day', o.created_at)
+                ORDER BY day ASC
+            `);
+            const dailySales = dailyRows.map(d => ({
+                day: d.day,
+                shortDay: d.short_day,
+                ordersCount: Number(d.orders_count),
+                revenue: Number(d.revenue)
+            }));
+
+            // 3. Топ-5 продаваних товарів
+            const { rows: topRows } = await db.query(`
+                SELECT 
+                    p.id, p.title, p.price, p.stock,
+                    c.name AS category,
+                    COALESCE(p.attributes->>'thumbnail', '') AS thumbnail,
+                    COALESCE((p.attributes->>'rating')::numeric, 0) AS rating,
+                    SUM(oi.quantity)::int AS units_sold,
+                    SUM(oi.quantity * oi.price_at_purchase)::numeric(12,2) AS revenue
+                FROM order_items oi
+                JOIN orders o ON o.id = oi.order_id AND o.status <> 'cancelled'
+                JOIN products p ON p.id = oi.product_id
+                LEFT JOIN categories c ON c.id = p.category_id
+                GROUP BY p.id, p.title, p.price, p.stock, c.name, p.attributes
+                ORDER BY revenue DESC, units_sold DESC
+                LIMIT 5
+            `);
+            const topProducts = topRows.map(p => ({
+                id: Number(p.id),
+                title: p.title,
+                price: Number(p.price),
+                stock: Number(p.stock),
+                category: p.category,
+                thumbnail: p.thumbnail,
+                rating: Number(p.rating),
+                unitsSold: Number(p.units_sold),
+                revenue: Number(p.revenue)
+            }));
+
+            // 4. Продажі за категоріями
+            const { rows: catRows } = await db.query(`
+                SELECT 
+                    c.name AS category,
+                    COUNT(DISTINCT o.id)::int AS orders_count,
+                    SUM(oi.quantity)::int AS units_sold,
+                    SUM(oi.quantity * oi.price_at_purchase)::numeric(12,2) AS revenue
+                FROM order_items oi
+                JOIN orders o ON o.id = oi.order_id AND o.status <> 'cancelled'
+                JOIN products p ON p.id = oi.product_id
+                JOIN categories c ON c.id = p.category_id
+                GROUP BY c.name
+                ORDER BY revenue DESC
+            `);
+            const totalCatRevenue = catRows.reduce((acc, c) => acc + Number(c.revenue), 0) || 1;
+            const categorySales = catRows.map(c => ({
+                category: c.category,
+                ordersCount: Number(c.orders_count),
+                unitsSold: Number(c.units_sold),
+                revenue: Number(c.revenue),
+                percentage: Math.round((Number(c.revenue) / totalCatRevenue) * 100)
+            }));
+
+            // 5. Товари з критично низьким залишком (<= 5)
+            const { rows: lowRows } = await db.query(`
+                SELECT 
+                    p.id, p.title, p.price, p.stock,
+                    c.name AS category,
+                    COALESCE(p.attributes->>'thumbnail', '') AS thumbnail
+                FROM products p
+                LEFT JOIN categories c ON c.id = p.category_id
+                WHERE p.stock <= 5
+                ORDER BY p.stock ASC
+                LIMIT 6
+            `);
+            const lowStockProducts = lowRows.map(p => ({
+                id: Number(p.id),
+                title: p.title,
+                price: Number(p.price),
+                stock: Number(p.stock),
+                category: p.category,
+                thumbnail: p.thumbnail
+            }));
+
+            // 6. Останні замовлення для швидкого перегляду
+            const { rows: recentRows } = await db.query(`
+                SELECT o.id, o.status, o.created_at,
+                       COALESCE(u.full_name, 'Гість') AS buyer_name,
+                       COALESCE(SUM(oi.quantity * oi.price_at_purchase), 0) AS total
+                FROM orders o
+                LEFT JOIN users u ON u.id = o.buyer_id
+                LEFT JOIN order_items oi ON oi.order_id = o.id
+                GROUP BY o.id, o.status, o.created_at, u.full_name
+                ORDER BY o.created_at DESC, o.id DESC
+                LIMIT 5
+            `);
+            const recentOrders = recentRows.map(o => ({
+                id: Number(o.id),
+                buyerName: o.buyer_name,
+                status: STATUS_FROM_DB[o.status] || o.status,
+                total: Number(o.total),
+                createdAt: o.created_at
+            }));
+
+            return res.json({
+                success: true,
+                stats: {
+                    overview,
+                    dailySales,
+                    topProducts,
+                    categorySales,
+                    lowStockProducts,
+                    recentOrders
+                }
+            });
+        }
+
         if (action === 'usersList') {
-            const { rows } = await db.query('SELECT id, full_name, email, role, created_at FROM users ORDER BY created_at DESC, id DESC');
-            const users = rows.map(u => ({ id: Number(u.id), name: u.full_name, email: u.email, role: roleToApi(u.role), created_at: u.created_at }));
+            const { rows } = await db.query(`
+                SELECT u.id, u.full_name, u.email, u.role, u.phone, u.city, u.created_at,
+                       COUNT(DISTINCT o.id) AS orders_count,
+                       COALESCE(SUM(CASE WHEN o.status <> 'cancelled' THEN oi.quantity * oi.price_at_purchase ELSE 0 END), 0) AS total_spent
+                FROM users u
+                LEFT JOIN orders o ON o.buyer_id = u.id
+                LEFT JOIN order_items oi ON oi.order_id = o.id
+                GROUP BY u.id, u.full_name, u.email, u.role, u.phone, u.city, u.created_at
+                ORDER BY u.created_at DESC, u.id DESC
+            `);
+            const users = rows.map(u => ({
+                id: Number(u.id),
+                name: u.full_name,
+                email: u.email,
+                role: roleToApi(u.role),
+                phone: u.phone || '',
+                city: u.city || '',
+                orders_count: Number(u.orders_count || 0),
+                total_spent: Number(u.total_spent || 0),
+                created_at: u.created_at
+            }));
             return res.json({ success: true, users });
         }
 

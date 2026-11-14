@@ -213,6 +213,11 @@ export function adminDeleteProduct(id) {
   return adminPost("productDelete", { id });
 }
 
+export async function adminGetStats() {
+  const data = await adminGet("statistics");
+  return data.success ? data.stats : null;
+}
+
 export async function adminGetUsers() {
   const data = await adminGet("usersList");
   return data.success ? data.users : [];
