@@ -1,0 +1,35 @@
+.ai-page{padding:50px 0 20px;display:flex;flex-direction:column;gap:60px}
+.ai-hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;
+  background:linear-gradient(135deg,#06140d,#0c2a1b);color:#fff;border-radius:24px;padding:48px;overflow:hidden}
+.ai-badge{display:inline-block;padding:6px 14px;border-radius:999px;background:rgba(0,160,70,.2);
+  color:#4dff9a;font-size:13px;font-weight:600;margin-bottom:16px}
+.ai-hero h1{font-size:40px;line-height:1.15;margin:0 0 16px}
+.ai-hero p{color:#c9d8cf;font-size:17px;line-height:1.6;margin:0 0 28px}
+.ai-hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.ai-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border:0;border-radius:12px;
+  background:var(--green);color:#fff;font-weight:600;font-size:15px;cursor:pointer;transition:.25s}
+.ai-btn:hover{filter:brightness(1.1);transform:translateY(-2px)}
+.ai-btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.35)}
+.ai-hero-photo img{width:100%;max-height:560px;object-fit:cover;object-position:top;border-radius:18px;
+  box-shadow:0 0 50px rgba(0,255,130,.25)}
+.ai-section-title{font-size:28px;margin:0 0 24px}
+.ai-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.ai-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:26px;transition:.25s}
+.ai-card:hover{border-color:var(--green);transform:translateY(-4px)}
+.ai-card-icon{width:46px;height:46px;border-radius:12px;background:rgba(0,160,70,.12);color:var(--green);
+  display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
+.ai-card h3{margin:0 0 8px;font-size:18px}
+.ai-card p{margin:0;color:var(--gray);line-height:1.55;font-size:15px}
+.ai-examples{display:flex;flex-wrap:wrap;gap:12px}
+.ai-chip{padding:11px 18px;border-radius:999px;border:1px solid var(--border);background:var(--surface);
+  color:var(--text);cursor:pointer;font-size:15px;transition:.25s}
+.ai-chip:hover{border-color:var(--green);color:var(--green)}
+.ai-gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.ai-gallery img{width:100%;height:100%;max-height:420px;object-fit:cover;border-radius:18px}
+@media(max-width:900px){
+  .ai-hero{grid-template-columns:1fr;padding:28px}
+  .ai-hero h1{font-size:30px}
+  .ai-grid{grid-template-columns:1fr 1fr}
+  .ai-gallery{grid-template-columns:1fr}
+}
+@media(max-width:560px){.ai-grid{grid-template-columns:1fr}}

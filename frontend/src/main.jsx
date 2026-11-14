@@ -6,6 +6,7 @@ import App from "./App";
 import "./styles/style.css";
 import "./styles/responsive.css";
 import "./styles/redesign.css";
+import "./styles/assistant-page.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

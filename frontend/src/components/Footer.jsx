@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { preventDefault } from "../utils/format";
 
@@ -40,6 +41,7 @@ export default function Footer() {
             <div className="footer-links">
               <FooterLink>+380 XX XXX XX XX</FooterLink>
               <FooterLink>info@novashop.ua</FooterLink>
+              <Link to="/assistant">{t("aiFooterLink")}</Link>
             </div>
           </div>
         </div>

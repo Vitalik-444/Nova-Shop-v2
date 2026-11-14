@@ -15,6 +15,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Orders = lazy(() => import("./pages/Orders"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Assistant = lazy(() => import("./pages/Assistant"));
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="register" element={<Register />} />
           <Route path="profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="settings" element={<Settings />} />
+          <Route path="assistant" element={<Assistant />} />
           <Route path="orders" element={<RequireAuth><Orders /></RequireAuth>} />
           <Route path="admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
