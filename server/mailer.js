@@ -14,6 +14,9 @@ function getTransporter() {
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: port,
         secure: isSecure,
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000,
         auth: {
             user: process.env.SMTP_USER,
             pass: (process.env.SMTP_PASS || '').replace(/\s+/g, '')
@@ -48,9 +51,14 @@ async function sendMail(to, name, subject, html) {
         html: html
     };
 
-    const currentTransporter = getTransporter();
-    const info = await currentTransporter.sendMail(mailOptions);
-    return { success: true, simulated: false, to, messageId: info.messageId };
+    try {
+        const currentTransporter = getTransporter();
+        const info = await currentTransporter.sendMail(mailOptions);
+        return { success: true, simulated: false, to, messageId: info.messageId };
+    } catch (err) {
+        console.warn('Failed to deliver email to ' + to + ':', err.message);
+        return { success: false, simulated: false, to, error: err.message };
+    }
 }
 
 module.exports = { sendMail, transporter, getTransporter };

@@ -197,7 +197,11 @@ router.all('/', async (req, res) => {
                     ? `NovaShop — Order #${orderId} confirmed`
                     : `NovaShop — замовлення №${orderId} підтверджено`;
                 const html = buildOrderEmailHtml(orderId, customer, items, total, lang);
-                await sendMail(customer.email, `${customer.name} ${customer.surname}`, subject, html);
+                const result = await sendMail(customer.email, `${customer.name} ${customer.surname}`, subject, html);
+                if (result && result.error) {
+                    emailSent = false;
+                    emailError = result.error;
+                }
             } catch (mailError) {
                 emailSent = false;
                 emailError = mailError.message;
