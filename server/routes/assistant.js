@@ -364,7 +364,7 @@ router.post('/', async (req, res) => {
         return res.status(500).json({ reply: 'Сервіс асистента тимчасово недоступний. Будь ласка, зверніться пізніше.' });
     }
 
-    const modelName = process.env.ASSISTANT_MODEL || 'gemini-3.8-flash';
+    const modelName = process.env.ASSISTANT_MODEL || 'gemini-3.1-flash-lite';
 
     try {
         const categoriesList = await getCategories();
@@ -413,14 +413,30 @@ ${productListText}`;
 
         const ai = new GoogleGenAI({ apiKey });
 
-        const response = await ai.models.generateContent({
-            model: modelName,
-            contents,
-            config: {
-                systemInstruction,
-                maxOutputTokens: 500
+        let response;
+        try {
+            response = await ai.models.generateContent({
+                model: modelName,
+                contents,
+                config: {
+                    systemInstruction,
+                    maxOutputTokens: 500
+                }
+            });
+        } catch (callErr) {
+            if (modelName !== 'gemini-3.1-flash-lite') {
+                response = await ai.models.generateContent({
+                    model: 'gemini-3.1-flash-lite',
+                    contents,
+                    config: {
+                        systemInstruction,
+                        maxOutputTokens: 500
+                    }
+                });
+            } else {
+                throw callErr;
             }
-        });
+        }
 
         const reply = response.text ? response.text.trim() : 'Дякую за звернення! Чим ще можу вам допомогти?';
 

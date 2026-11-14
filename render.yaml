@@ -15,7 +15,7 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: ASSISTANT_MODEL
-        value: gemini-3.8-flash
+        value: gemini-3.1-flash-lite
       - key: GEMINI_API_KEY
         sync: false
 
