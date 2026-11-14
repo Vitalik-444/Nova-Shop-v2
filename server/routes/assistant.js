@@ -413,26 +413,26 @@ ${productListText}`;
 
         const ai = new GoogleGenAI({ apiKey });
 
-        let response;
-        try {
-            response = await ai.models.generateContent({
-                model: modelName,
-                contents,
-                config: {
-                    systemInstruction,
-                    maxOutputTokens: 500
-                }
-            });
-        } catch (callErr) {
-            if (modelName !== 'gemini-3.1-flash-lite') {
-                response = await ai.models.generateContent({
-                    model: 'gemini-3.1-flash-lite',
+        const callWithTimeout = (model, timeoutMs = 8000) => {
+            return Promise.race([
+                ai.models.generateContent({
+                    model,
                     contents,
                     config: {
                         systemInstruction,
                         maxOutputTokens: 500
                     }
-                });
+                }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs))
+            ]);
+        };
+
+        let response;
+        try {
+            response = await callWithTimeout(modelName, 8000);
+        } catch (callErr) {
+            if (modelName !== 'gemini-3.1-flash-lite') {
+                response = await callWithTimeout('gemini-3.1-flash-lite', 8000);
             } else {
                 throw callErr;
             }
