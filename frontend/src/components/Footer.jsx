@@ -39,8 +39,8 @@ export default function Footer() {
           <div>
             <h3 className="footer-title">{t("contacts")}</h3>
             <div className="footer-links">
-              <FooterLink>+380 XX XXX XX XX</FooterLink>
-              <FooterLink>info@novashop.ua</FooterLink>
+              <FooterLink>+380 63 741 79 80</FooterLink>
+              <FooterLink>nova444shop@gmail.com</FooterLink>
               <Link to="/assistant">{t("aiFooterLink")}</Link>
             </div>
           </div>
