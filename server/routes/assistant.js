@@ -1,7 +1,7 @@
 const express = require('express');
 const { GoogleGenAI } = require('@google/genai');
 const { query } = require('../db');
-const { getProductTitle, getProductDescription, getCategoryTitle } = require('../lib/productTranslations');
+const { getProductTitle, getProductDescription, getCategoryTitle, resolveCategorySlug } = require('../lib/productTranslations');
 
 const router = express.Router();
 
@@ -28,13 +28,18 @@ const STOP_WORDS = new Set([
     'добрий', 'день', 'привіт', 'вітаю', 'хочу', 'знайти', 'потрібно', 'підкажи',
     'дешевий', 'дорогий', 'гарний', 'кращий', 'скажи', 'покажи', 'або', 'але', 'щоб',
     'якщо', 'цей', 'ця', 'це', 'ці', 'через', 'після', 'перед',
+    'розкажи', 'розкажіть', 'опиши', 'опишіть', 'перелічи', 'перерахуй', 'поділися',
+    'про', 'для', 'від', 'під', 'над', 'просто', 'дуже', 'всі', 'весь', 'вся', 'все',
+    'товари', 'товар', 'товарами', 'товарах', 'наявні', 'наявність', 'наявності', 'є', 'маєте', 'що',
+    'як', 'де', 'хто', 'чого', 'куди', 'звідки', 'цікаве', 'магазин', 'магазині', 'асортимент',
     'какой', 'какая', 'какое', 'какие', 'кому', 'чему', 'меня', 'тебя', 'его',
     'пожалуйста', 'посоветуй', 'порекомендуй', 'ищу', 'купить', 'сколько', 'стоит',
     'привет', 'здравствуйте', 'хочу', 'найти', 'нужно', 'подскажи', 'дешевый', 'дорогой',
     'хороший', 'лучший', 'скажи', 'покажи', 'или', 'чтобы', 'если', 'этот', 'эта', 'это', 'эти',
+    'расскажи', 'расскажите', 'товары', 'товаров', 'магазине', 'наличии', 'есть',
     'the', 'and', 'for', 'with', 'from', 'about', 'what', 'which', 'who', 'how', 'where', 'when',
     'why', 'can', 'you', 'please', 'tell', 'show', 'recommend', 'look', 'find', 'buy', 'cheap',
-    'expensive', 'good', 'best', 'this', 'that', 'these', 'those'
+    'expensive', 'good', 'best', 'this', 'that', 'these', 'those', 'products', 'product', 'items', 'store'
 ]);
 
 function cleanWords(text) {
@@ -79,13 +84,15 @@ async function getCategories(lang = 'uk') {
 
 async function search_products(queryText, category, lang = 'uk') {
     const availableCategories = await getCategories(lang);
-    const words = cleanWords(queryText);
+    const categorySlug = category ? resolveCategorySlug(category) : resolveCategorySlug(queryText);
+    const rawWords = cleanWords(queryText);
+    const words = categorySlug ? rawWords.filter(w => resolveCategorySlug(w) !== categorySlug) : rawWords;
+
     const params = [];
     const conditions = [];
 
-    if (category && typeof category === 'string' && category.trim()) {
-        const catClean = category.trim().toLowerCase();
-        params.push(catClean);
+    if (categorySlug) {
+        params.push(categorySlug.toLowerCase());
         const idx = params.length;
         conditions.push(`(
             LOWER(COALESCE(p.category, c.name, '')) = $${idx} 
@@ -132,12 +139,36 @@ async function search_products(queryText, category, lang = 'uk') {
         LEFT JOIN product_reviews pr ON pr.product_id = p.id
         ${whereSql}
         GROUP BY p.id, p.title, p.category, c.name, p.price, p.description, p.attributes
-        ORDER BY match_score DESC, avg_rating DESC, p.id ASC
+        ORDER BY match_score DESC, avg_rating DESC, p.price ASC, p.id ASC
         LIMIT 8
     `;
 
     try {
-        const { rows } = await query(sql, params);
+        let { rows } = await query(sql, params);
+
+        if ((!rows || rows.length === 0) && categorySlug) {
+            const fallbackRes = await query(`
+                SELECT 
+                    p.id,
+                    p.title,
+                    COALESCE(p.attributes->>'title_uk', '') AS title_uk,
+                    COALESCE(p.category, c.name, 'general') AS category,
+                    p.price,
+                    COALESCE(p.description, '') AS description,
+                    COALESCE(p.attributes->>'description_uk', '') AS description_uk,
+                    COALESCE(ROUND(AVG(pr.rating)::numeric, 1), ROUND(COALESCE((p.attributes->>'rating')::numeric, 0), 1), 0) AS avg_rating,
+                    1 AS match_score
+                FROM products p
+                LEFT JOIN categories c ON c.id = p.category_id
+                LEFT JOIN product_reviews pr ON pr.product_id = p.id
+                WHERE LOWER(COALESCE(p.category, c.name, '')) = $1
+                GROUP BY p.id, p.title, p.category, c.name, p.price, p.description, p.attributes
+                ORDER BY avg_rating DESC, p.price ASC, p.id ASC
+                LIMIT 8
+            `, [categorySlug.toLowerCase()]);
+            rows = fallbackRes.rows;
+        }
+
         if (!rows || rows.length === 0) {
             return {
                 products: [],
@@ -431,32 +462,32 @@ router.post('/', async (req, res) => {
 
         const systemInstruction = isEn
             ? `You are Nova, the virtual AI assistant for customers of the modern NovaShop online store.
+You have full access to the store's product catalog (over 190 products across 24 categories, including furniture, laptops, smartphones, fragrances, beauty, groceries, home decor, etc.).
 Available categories: ${categoriesList.join(', ')}
 
 Rules:
 1. Answer in English, briefly, friendly, and politely.
-2. In your first message, always state that you are the AI assistant for NovaShop.
-3. In the category parameter of search_products, only use values from the list of available categories. If the query is vague, match it with suitable categories and call search multiple times if needed.
-4. Only recommend products from the provided list of found store products.
-5. Do not invent prices, stock, or features that are not in the list.
-6. If suitable products are not found, state this honestly and suggest choosing from the available categories.
-7. Politely decline questions that are not related to the store, products, and shopping, reminding the user that you are the NovaShop assistant.
+2. In your first message, state that you are Nova, the AI assistant for NovaShop.
+3. Recommend products from the provided list of store products with their name, price, and key features.
+4. Do not invent prices or products that do not exist.
+5. If products are found, describe them helpfully. If no specific products match, suggest suitable categories from the store.
+6. Politely decline questions that are not related to the store, products, and shopping.
 
-Found products for the query:
+Products in catalog for this query:
 ${productListText}`
             : `Ти — Нова, віртуальний ІІ-асистент покупців сучасного інтернет-магазину NovaShop.
+Ти маєш повний доступ до каталогу товарів магазину (понад 190 товарів у 24 категоріях, включаючи меблі, ноутбуки, смартфони, парфумерію, красу, продукти, декор тощо).
 Доступні категорії: ${categoriesList.join(', ')}
 
 Правила:
 1. Відповідай виключно українською мовою, коротко, дружелюбно та приязно.
 2. У своєму першому повідомленні обов'язково вкажи, що ти — ІІ-асистент магазину NovaShop.
-3. У параметр category функції search_products підставляй тільки значення зі списку доступних категорій. Якщо запит розпливчатий, зістав його з підходящими категоріями і за потреби виклич пошук кілька разів.
-4. Рекомендуй ТІЛЬКИ товари з наданого списку знайдених товарів магазину.
-5. Не вигадуй ціни, наявність чи характеристики, яких немає у списку.
-6. При відсутності підходящих товарів чесно про це говори та запропонуй обрати серед доступних категорій.
-7. На запитання, які не стосуються магазину, товарів та покупок, ввічливо відмовляйся відповідати, нагадуючи, що ти асистент NovaShop.
+3. Презентуй та рекомендуй товари зі списку знайдених товарів магазину із зазначенням назви, ціни та ключових характеристик.
+4. Не вигадуй ціни, наявність чи характеристики.
+5. Якщо товари знайдені — розкажи про них детально та цікаво. Якщо за специфічним словом нічого не знайдено — вкажи це та запропонуй відповідні доступні категорії магазину.
+6. На запитання, які не стосуються магазину, товарів та покупок, ввічливо відмовляйся відповідати, нагадуючи, що ти асистент NovaShop.
 
-Знайдені товари за запитом:
+Знайдені товари в каталозі:
 ${productListText}`;
 
         const contents = [];
