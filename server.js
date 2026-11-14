@@ -27,9 +27,12 @@ app.use(session({
 // Статика фронтенду: лише зібраний бандл і картинки (а не весь каталог проєкту з .env і кодом сервера)
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/css', express.static(path.join(__dirname, 'css')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 // API Routes (URL збережені, щоб фронтенд працював без змін)
+app.use('/api/assistant', require('./server/routes/assistant'));
 app.use('/api/auth.php', require('./server/routes/auth'));
 app.use('/api/products.php', require('./server/routes/products'));
 app.use('/api/cart.php', require('./server/routes/cart'));
