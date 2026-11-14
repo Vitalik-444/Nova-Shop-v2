@@ -60,7 +60,7 @@
 
     var avatar = document.createElement('div');
     avatar.className = 'nova-assistant-avatar';
-    avatar.innerHTML = '<i class="fa-solid fa-robot"></i>';
+    avatar.innerHTML = '<img src="/images/nova-portrait.jpg" alt="Nova" class="nova-avatar-img" onerror="this.onerror=null;this.parentElement.innerHTML=\'<i class=\\\'fa-solid fa-robot\\\'></i>\';" />';
 
     var titlesWrap = document.createElement('div');
     var title = document.createElement('div');

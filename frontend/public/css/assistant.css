@@ -87,6 +87,19 @@
     font-size: 15px;
     box-shadow: 0 2px 8px rgba(var(--accent-rgb, 0, 160, 70), 0.35);
     transition: background 0.25s ease, box-shadow 0.25s ease;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1.5px solid var(--accent, #00A046);
+}
+
+.nova-assistant-avatar img,
+.nova-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    border-radius: 50%;
 }
 
 .nova-assistant-title {
