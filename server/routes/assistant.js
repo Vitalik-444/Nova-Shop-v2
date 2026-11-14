@@ -1,6 +1,7 @@
 const express = require('express');
 const { GoogleGenAI } = require('@google/genai');
 const { query } = require('../db');
+const { getProductTitle, getProductDescription, getCategoryTitle } = require('../lib/productTranslations');
 
 const router = express.Router();
 
@@ -51,10 +52,10 @@ let categoriesCache = {
     expiresAt: 0
 };
 
-async function getCategories() {
+async function getCategories(lang = 'uk') {
     const now = Date.now();
     if (categoriesCache.data.length > 0 && categoriesCache.expiresAt > now) {
-        return categoriesCache.data;
+        return categoriesCache.data.map(c => getCategoryTitle(c, lang));
     }
     try {
         let rows = [];
@@ -70,21 +71,26 @@ async function getCategories() {
             data: list,
             expiresAt: now + 5 * 60 * 1000
         };
-        return list;
+        return list.map(c => getCategoryTitle(c, lang));
     } catch {
-        return categoriesCache.data || [];
+        return (categoriesCache.data || []).map(c => getCategoryTitle(c, lang));
     }
 }
 
 async function search_products(queryText, category, lang = 'uk') {
-    const availableCategories = await getCategories();
+    const availableCategories = await getCategories(lang);
     const words = cleanWords(queryText);
     const params = [];
     const conditions = [];
 
     if (category && typeof category === 'string' && category.trim()) {
-        params.push(category.trim().toLowerCase());
-        conditions.push(`(LOWER(COALESCE(p.category, c.name, '')) = $${params.length})`);
+        const catClean = category.trim().toLowerCase();
+        params.push(catClean);
+        const idx = params.length;
+        conditions.push(`(
+            LOWER(COALESCE(p.category, c.name, '')) = $${idx} 
+            OR LOWER(COALESCE(c.name, '')) = $${idx}
+        )`);
     }
 
     let matchScoreSql = '0';
@@ -142,16 +148,29 @@ async function search_products(queryText, category, lang = 'uk') {
             };
         }
         return {
-            products: rows.map(r => ({
-                id: r.id,
-                title: r.title,
-                title_uk: r.title_uk,
-                category: r.category,
-                price: Number(r.price),
-                avg_rating: Number(r.avg_rating),
-                description: r.description,
-                description_uk: r.description_uk
-            })),
+            products: rows.map(r => {
+                const titleEn = getProductTitle(r.title, 'en');
+                const titleUk = r.title_uk || getProductTitle(r.title, 'uk');
+                const descEn = getProductDescription(r.description, 'en') || r.description || '';
+                const descUk = r.description_uk || getProductDescription(r.description, 'uk') || getProductDescription(r.id, 'uk') || '';
+                const catEn = getCategoryTitle(r.category, 'en');
+                const catUk = getCategoryTitle(r.category, 'uk');
+
+                return {
+                    id: r.id,
+                    title: lang === 'en' ? titleEn : titleUk,
+                    title_en: titleEn,
+                    title_uk: titleUk,
+                    category: lang === 'en' ? catEn : catUk,
+                    category_en: catEn,
+                    category_uk: catUk,
+                    price: Number(r.price),
+                    avg_rating: Number(r.avg_rating),
+                    description: lang === 'en' ? descEn : descUk,
+                    description_en: descEn,
+                    description_uk: descUk
+                };
+            }),
             count: rows.length
         };
     } catch {
@@ -440,27 +459,42 @@ ${productListText}`
 Знайдені товари за запитом:
 ${productListText}`;
 
-        const sanitizedHistory = Array.isArray(history)
-            ? history
-                .slice(-10)
-                .filter(item => item && (item.role === 'user' || item.role === 'model') && typeof item.content === 'string' && item.content.trim())
-                .map(item => ({
+        const contents = [];
+        let lastRole = null;
+        if (Array.isArray(history)) {
+            for (const item of history.slice(-10)) {
+                if (!item || (item.role !== 'user' && item.role !== 'model')) continue;
+                const text = typeof item.content === 'string' ? item.content.trim().slice(0, 500) : '';
+                if (!text) continue;
+                if (item.role === lastRole) continue;
+                if (contents.length === 0 && item.role !== 'user') continue;
+                contents.push({
                     role: item.role,
-                    parts: [{ text: item.content.trim().slice(0, 500) }]
-                }))
-            : [];
-
-        const contents = [
-            ...sanitizedHistory,
-            {
-                role: 'user',
-                parts: [{ text: cleanMessage }]
+                    parts: [{ text }]
+                });
+                lastRole = item.role;
             }
-        ];
+        }
+        if (lastRole === 'user') {
+            contents.push({
+                role: 'model',
+                parts: [{ text: isEn ? 'Understood. How can I help?' : 'Зрозуміло. Чим можу допомогти?' }]
+            });
+        }
+        contents.push({
+            role: 'user',
+            parts: [{ text: cleanMessage }]
+        });
 
         const ai = new GoogleGenAI({ apiKey });
 
-        const callWithTimeout = (model, timeoutMs = 8000) => {
+        const modelsToTry = [
+            process.env.ASSISTANT_MODEL,
+            'gemini-3.5-flash-lite',
+            'gemini-3.1-flash-lite'
+        ].filter((m, i, arr) => m && arr.indexOf(m) === i);
+
+        const callWithTimeout = (model, timeoutMs = 7000) => {
             return Promise.race([
                 ai.models.generateContent({
                     model,
@@ -474,15 +508,19 @@ ${productListText}`;
             ]);
         };
 
-        let response;
-        try {
-            response = await callWithTimeout(modelName, 8000);
-        } catch (callErr) {
-            if (modelName !== 'gemini-3.1-flash-lite') {
-                response = await callWithTimeout('gemini-3.1-flash-lite', 8000);
-            } else {
-                throw callErr;
+        let response = null;
+        let lastErr = null;
+        for (const candidate of modelsToTry) {
+            try {
+                response = await callWithTimeout(candidate, 7000);
+                if (response && response.text) break;
+            } catch (callErr) {
+                lastErr = callErr;
             }
+        }
+
+        if (!response && lastErr) {
+            throw lastErr;
         }
 
         const defaultReply = isEn

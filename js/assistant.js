@@ -209,16 +209,23 @@
         input.disabled = true;
         sendBtn.disabled = true;
 
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function () {
+            controller.abort();
+        }, 15000);
+
         try {
             var res = await fetch('/api/assistant', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
                 body: JSON.stringify({
                     message: text,
                     history: history,
                     language: activeLang
                 })
             });
+            clearTimeout(timeoutId);
 
             var data = await res.json();
             hideTyping();
@@ -232,6 +239,7 @@
                 history = history.slice(-20);
             }
         } catch {
+            clearTimeout(timeoutId);
             hideTyping();
             addMessage('model', activeTexts.networkError);
         } finally {
