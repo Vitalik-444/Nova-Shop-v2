@@ -18,6 +18,18 @@ services:
         value: gemini-3.1-flash-lite
       - key: GEMINI_API_KEY
         sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_FROM_NAME
+        value: NovaShop
+      - key: SMTP_USER
+        value: nova444shop@gmail.com
+      - key: SMTP_FROM_EMAIL
+        value: nova444shop@gmail.com
+      - key: SMTP_PASS
+        sync: false
 
 databases:
   - name: nova-shop-db
