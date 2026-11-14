@@ -118,7 +118,7 @@ router.post('/', async (req, res) => {
         return res.status(500).json({ reply: 'Сервіс асистента тимчасово недоступний. Будь ласка, зверніться пізніше.' });
     }
 
-    const modelName = process.env.ASSISTANT_MODEL || 'gemini-2.5-flash';
+    const modelName = process.env.ASSISTANT_MODEL || 'gemini-3.8-flash';
 
     try {
         const products = await findRelevantProducts(cleanMessage);
