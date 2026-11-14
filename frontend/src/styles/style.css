@@ -2432,13 +2432,13 @@ select.input{
 
     position:fixed;
 
-    right:30px;
+    right:26px;
 
-    bottom:30px;
+    bottom:86px;
 
-    width:55px;
+    width:48px;
 
-    height:55px;
+    height:48px;
 
     border-radius:50%;
 
@@ -2462,7 +2462,7 @@ select.input{
 
     transition:.3s;
 
-    z-index:1000;
+    z-index:900;
 
 }
 
