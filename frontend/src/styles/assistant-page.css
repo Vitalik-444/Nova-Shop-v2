@@ -28,7 +28,7 @@
 .ai-gallery img{width:100%;border-radius:18px;border:1px solid var(--border);transition:transform .25s ease,box-shadow .25s ease}
 .ai-gallery img:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,160,70,.15)}
 .ai-gallery img:not(.ai-gallery-wide){aspect-ratio:1/1;max-height:480px;object-fit:cover;object-position:center top}
-.ai-gallery img.ai-gallery-wide{grid-column:1 / -1;aspect-ratio:16/9;max-height:560px;object-fit:cover;object-position:center}
+.ai-gallery img.ai-gallery-wide{grid-column:1 / -1;aspect-ratio:16/9;max-height:640px;object-fit:cover;object-position:center top}
 @media(max-width:900px){
   .ai-hero{grid-template-columns:1fr;padding:28px}
   .ai-hero h1{font-size:30px}
