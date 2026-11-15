@@ -11,8 +11,9 @@ const ABILITIES = [
 ];
 
 const GALLERY = [
-  "/images/nova-office.jpg",
-  "/images/nova-portrait.jpg",
+  { src: "/images/nova-lounge.jpg", alt: "Nova — AI-помічник" },
+  { src: "/images/nova-portrait.jpg", alt: "Nova — Портрет" },
+  { src: "/images/nova-banner.jpg", alt: "NovaShop — Твій інтернет-магазин", wide: true },
 ];
 
 export default function Assistant() {
@@ -78,8 +79,14 @@ export default function Assistant() {
       </section>
 
       <section className="ai-gallery">
-        {GALLERY.map((src) => (
-          <img key={src} src={src} alt="Nova" loading="lazy" />
+        {GALLERY.map((item) => (
+          <img
+            key={item.src}
+            src={item.src}
+            alt={item.alt}
+            className={item.wide ? "ai-gallery-wide" : ""}
+            loading="lazy"
+          />
         ))}
       </section>
     </div>
