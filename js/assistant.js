@@ -126,11 +126,49 @@
         if (typingLabel) typingLabel.textContent = texts.typing;
     }
 
+    function formatMessageHtml(text) {
+        var safe = String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        safe = safe.replace(/\[([^\]]+)\]\((#[^)\s]+|\/[^)\s]+)\)/g, function (match, title, url) {
+            return '<a href="' + url + '" class="nova-chat-link">' + title + '</a>';
+        });
+        safe = safe.replace(/\n/g, '<br>');
+        return safe;
+    }
+
     function addMessage(role, text) {
         var msg = document.createElement('div');
         msg.className = role === 'user' ? 'nova-msg nova-msg-user' : 'nova-msg nova-msg-bot';
-        msg.textContent = text;
+        if (role === 'user') {
+            msg.textContent = text;
+        } else {
+            msg.innerHTML = formatMessageHtml(text);
+        }
         messagesList.appendChild(msg);
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
+    function addChips(suggestions) {
+        if (!Array.isArray(suggestions) || !suggestions.length) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'nova-chips';
+        suggestions.forEach(function (s) {
+            var chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'nova-chip';
+            chip.textContent = s;
+            chip.addEventListener('click', function () {
+                input.value = s;
+                form.dispatchEvent(new Event('submit'));
+                if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+            });
+            wrap.appendChild(chip);
+        });
+        messagesList.appendChild(wrap);
         messagesList.scrollTop = messagesList.scrollHeight;
     }
 
@@ -162,6 +200,9 @@
 
     var initialLang = getLang();
     addMessage('model', (i18n[initialLang] || i18n.uk).greeting);
+    addChips(initialLang === 'en'
+        ? ['🚚 Delivery terms', '💳 Installment 0%', '🛡️ Warranty & returns', '💻 Recommend laptops']
+        : ['🚚 Умови доставки', '💳 Оплата частинами 0%', '🛡️ Гарантія та повернення', '💻 Порадь ноутбук']);
 
     try {
         new MutationObserver(function () {
