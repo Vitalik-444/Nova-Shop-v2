@@ -43,8 +43,9 @@ app.use('/api/favorites.php', require('./server/routes/favorites'));
 app.use('/api/viewed.php', require('./server/routes/viewed'));
 app.use('/api/viewed', require('./server/routes/viewed'));
 
-// SPA fallback for all non-API routes
-app.get('*', (req, res) => {
+// SPA fallback for all non-API routes (Express 5 compatible)
+app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ error: 'Endpoint not found' });
     }
