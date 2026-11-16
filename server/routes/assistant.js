@@ -127,6 +127,8 @@ async function search_products(queryText, category, lang = 'uk') {
         SELECT 
             p.id,
             p.title,
+            p.stock,
+            p.attributes,
             COALESCE(p.attributes->>'title_uk', '') AS title_uk,
             COALESCE(p.category, c.name, 'general') AS category,
             p.price,
@@ -138,7 +140,7 @@ async function search_products(queryText, category, lang = 'uk') {
         LEFT JOIN categories c ON c.id = p.category_id
         LEFT JOIN product_reviews pr ON pr.product_id = p.id
         ${whereSql}
-        GROUP BY p.id, p.title, p.category, c.name, p.price, p.description, p.attributes
+        GROUP BY p.id, p.title, p.stock, p.category, c.name, p.price, p.description, p.attributes
         ORDER BY match_score DESC, avg_rating DESC, p.price ASC, p.id ASC
         LIMIT 8
     `;
@@ -151,6 +153,8 @@ async function search_products(queryText, category, lang = 'uk') {
                 SELECT 
                     p.id,
                     p.title,
+                    p.stock,
+                    p.attributes,
                     COALESCE(p.attributes->>'title_uk', '') AS title_uk,
                     COALESCE(p.category, c.name, 'general') AS category,
                     p.price,
@@ -162,7 +166,7 @@ async function search_products(queryText, category, lang = 'uk') {
                 LEFT JOIN categories c ON c.id = p.category_id
                 LEFT JOIN product_reviews pr ON pr.product_id = p.id
                 WHERE LOWER(COALESCE(p.category, c.name, '')) = $1
-                GROUP BY p.id, p.title, p.category, c.name, p.price, p.description, p.attributes
+                GROUP BY p.id, p.title, p.stock, p.category, c.name, p.price, p.description, p.attributes
                 ORDER BY avg_rating DESC, p.price ASC, p.id ASC
                 LIMIT 8
             `, [categorySlug.toLowerCase()]);
@@ -186,6 +190,7 @@ async function search_products(queryText, category, lang = 'uk') {
                 const descUk = r.description_uk || getProductDescription(r.description, 'uk') || getProductDescription(r.id, 'uk') || '';
                 const catEn = getCategoryTitle(r.category, 'en');
                 const catUk = getCategoryTitle(r.category, 'uk');
+                const thumbnail = r.attributes?.thumbnail || (Array.isArray(r.attributes?.images) && r.attributes.images[0]) || '/images/banner.png';
 
                 return {
                     id: r.id,
@@ -197,6 +202,8 @@ async function search_products(queryText, category, lang = 'uk') {
                     category_uk: catUk,
                     price: Number(r.price),
                     avg_rating: Number(r.avg_rating),
+                    stock: Number(r.stock) || 0,
+                    thumbnail,
                     description: lang === 'en' ? descEn : descUk,
                     description_en: descEn,
                     description_uk: descUk
@@ -413,8 +420,9 @@ router.get('/stats', requireAdmin, async (req, res) => {
 
 router.post('/', async (req, res) => {
     const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+    const userId = req.session?.user_id;
 
-    const { message, history, language } = req.body || {};
+    const { message, history, language, currentProductId } = req.body || {};
     const cleanMessage = (typeof message === 'string' ? message : '').trim().slice(0, 500);
     const isEn = language === 'en' || (!language && !/[а-яіїєґ]/i.test(cleanMessage));
 
@@ -443,12 +451,57 @@ router.post('/', async (req, res) => {
         });
     }
 
-    const modelName = process.env.ASSISTANT_MODEL || 'gemini-3.1-flash-lite';
-
     try {
         const categoriesList = await getCategories();
         const searchResult = await search_products(cleanMessage, undefined, isEn ? 'en' : 'uk');
         const foundCount = searchResult.products ? searchResult.products.length : 0;
+
+        // Context of currently viewed product on the page (if on #/product/:id)
+        let viewedProductContext = '';
+        let viewedProduct = null;
+        if (currentProductId) {
+            viewedProduct = await get_product_details(currentProductId);
+            if (viewedProduct) {
+                const vTitle = isEn ? getProductTitle(viewedProduct.title, 'en') : (viewedProduct.attributes?.title_uk || viewedProduct.title);
+                const vDesc = isEn ? (getProductDescription(viewedProduct.description, 'en') || viewedProduct.description) : (viewedProduct.attributes?.description_uk || viewedProduct.description);
+                viewedProductContext = isEn
+                    ? `\nCURRENTLY VIEWED PRODUCT BY USER:\n- ID ${viewedProduct.id}: "${vTitle}" | Category: ${viewedProduct.category} | Price: $${Number(viewedProduct.price).toFixed(2)} | Rating: ${Number(viewedProduct.avg_rating).toFixed(1)}/5 | Stock: ${Number(viewedProduct.stock) > 0 ? 'In stock' : 'Out of stock'}\n- Description: ${vDesc}\nIf user asks about specs, stock, warranty, or alternatives, they are referring to this product!\n`
+                    : `\nТОВАР, ЯКИЙ ЗАРАЗ ПЕРЕГЛЯДАЄ КОРИСТУВАЧ:\n- ID ${viewedProduct.id}: "${vTitle}" | Категорія: ${viewedProduct.category} | Ціна: $${Number(viewedProduct.price).toFixed(2)} | Рейтинг: ${Number(viewedProduct.avg_rating).toFixed(1)}/5 | Наявність: ${Number(viewedProduct.stock) > 0 ? 'В наявності' : 'Немає в наявності'}\n- Опис: ${vDesc}\nЯкщо користувач запитує про характеристики, наявність, гарантію або аналоги — він має на увазі саме цей товар!\n`;
+            }
+        }
+
+        // Context of user orders and cart (if asking about them)
+        let userContext = '';
+        const lowerMsg = cleanMessage.toLowerCase();
+        const asksOrders = /замовленн|order|де мій|статус|покупк/i.test(lowerMsg);
+        const asksCart = /кошик|корзин|cart/i.test(lowerMsg);
+
+        if (userId) {
+            if (asksOrders) {
+                const orders = await get_my_orders(userId);
+                if (orders && orders.length > 0) {
+                    userContext += isEn
+                        ? `\nUSER ORDERS HISTORY:\n` + orders.map(o => `- Order #${o.id}: Status "${o.status}", Items: ${o.items_count}, Total: $${Number(o.total).toFixed(2)}, Date: ${new Date(o.created_at).toLocaleDateString()}`).join('\n') + '\n'
+                        : `\nІСТОРІЯ ЗАМОВЛЕНЬ КОРИСТУВАЧА:\n` + orders.map(o => `- Замовлення #${o.id}: Статус "${o.status}", Товарів: ${o.items_count}, Сума: $${Number(o.total).toFixed(2)}, Дата: ${new Date(o.created_at).toLocaleDateString()}`).join('\n') + '\n';
+                } else {
+                    userContext += isEn ? `\nUser currently has no past orders.\n` : `\nУ користувача ще немає оформлених замовлень.\n`;
+                }
+            }
+            if (asksCart) {
+                const cartItems = await get_my_cart(userId);
+                if (cartItems && cartItems.length > 0) {
+                    userContext += isEn
+                        ? `\nUSER CURRENT CART:\n` + cartItems.map(c => `- ${c.title} x${c.quantity} ($${Number(c.subtotal).toFixed(2)})`).join('\n') + '\n'
+                        : `\nПОТОЧНИЙ КОШИК КОРИСТУВАЧА:\n` + cartItems.map(c => `- ${c.title} x${c.quantity} ($${Number(c.subtotal).toFixed(2)})`).join('\n') + '\n';
+                } else {
+                    userContext += isEn ? `\nUser cart is currently empty.\n` : `\nКошик користувача порожній.\n`;
+                }
+            }
+        } else if (asksOrders || asksCart) {
+            userContext += isEn
+                ? `\nNote: The user is a guest (not logged in). If they ask about personal orders or cart, politely invite them to [Log In](#/login).\n`
+                : `\nПримітка: Користувач не авторизований (гість). Якщо він запитує про власні замовлення чи кошик, ввічливо запропонуй йому [Увійти](#/login).\n`;
+        }
 
         let productListText = searchResult.message || (isEn ? 'No products found.' : 'Товарів не знайдено.');
         if (searchResult.products && searchResult.products.length > 0) {

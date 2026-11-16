@@ -376,6 +376,17 @@ export function AppProvider({ children }) {
     showToast(t("productAdded"));
   }, [persistCart, showToast, t]);
 
+  useEffect(() => {
+    const handleExternalAddToCart = (event) => {
+      const { id, quantity } = event.detail || {};
+      if (id) {
+        addToCart(id, quantity || 1);
+      }
+    };
+    window.addEventListener("novashop:add-to-cart", handleExternalAddToCart);
+    return () => window.removeEventListener("novashop:add-to-cart", handleExternalAddToCart);
+  }, [addToCart]);
+
   const changeQuantity = useCallback((id, delta) => {
     const next = cartRef.current.map(item => {
       if (item.id !== id) return item;
