@@ -418,11 +418,38 @@ router.get('/stats', requireAdmin, async (req, res) => {
     }
 });
 
+function isProductSearchIntent(message, currentProductId) {
+    const text = (message || '').toLowerCase().trim();
+    if (!text) return false;
+
+    // Check if it's purely greeting or farewell
+    const isSmallTalk = /^(привіт|вітаю|добрий день|доброго дня|здравствуйте|привет|hello|hi|hey|дякую|спасиб|thanks|thank you|пока|бувай|до побачення)[\s!.,?]*$/i.test(text);
+    if (isSmallTalk) return false;
+
+    // Questions exclusively about delivery, payment, warranty, contacts, store hours
+    const isServiceQuery = /(доставк|оплат|гаранті|повернен|шоурум|хрещатик|крещатик|контакт|телефон|номер|графік|роботи|де ви|де знаходитесь|замовленн|де мій|де моє|мій заказ|статус замовлення|у кошику|в корзині|delivery|shipping|payment|warranty|guarantee|refund|return|contact|hours|schedule|where are you|my order|track order|in cart)/i.test(text);
+
+    // Markers showing the user explicitly wants to find, choose, buy or compare products
+    const hasSearchMarkers = /(порадь|порекомендуй|посоветуй|підкажи|шукаю|ищу|купити|купить|покажи|знайди|найди|хочу|вибрати|выбрать|який краще|какой лучше|що вибрати|что выбрать|ціна на|цена на|скільки коштує|сколько стоит|чи є в наявності|есть ли в наличии|є у вас|есть у вас|підібрати|подобрать|асортимент|каталог|порівня|сравни|різниц|разниц|що краще|что лучше| vs |проти|recommend|suggest|show|find|search|buy|looking for|choose|which is better|how much is|price of|in stock|available|compare|difference|versus)/i.test(text);
+
+    // Explicit product categories / keywords
+    const hasCategoryWords = /(ноутбук|смартфон|телефон|навушник|наушник|годинник|часы|планшет|духи|парфум|меблі|мебель|крісло|стіл|стол|монітор|монитор|клавіатур|мишк|чохол|чехол|павербанк|powerbank|зарядк|аксесуар|телевізор|колонк|акустик|laptop|smartphone|phone|headphones|earphones|smartwatch|watch|tablet|perfume|furniture|chair|desk|table|monitor|keyboard|mouse|powerbank|charger|accessory|tv|television|speaker)/i.test(text);
+
+    // On a product page, asking about alternatives:
+    const hasAlternativeMarkers = Boolean(currentProductId && /(аналог|дешев|інш|другой|схож|похож|замін|кращ|cheaper|alternative|similar)/i.test(text));
+
+    if (isServiceQuery && !hasSearchMarkers && !hasCategoryWords) {
+        return false;
+    }
+
+    return hasSearchMarkers || hasCategoryWords || hasAlternativeMarkers;
+}
+
 router.post('/', async (req, res) => {
     const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
     const userId = req.session?.user_id;
 
-    const { message, history, language, currentProductId } = req.body || {};
+    const { message, history, language, currentProductId, stream: reqStream } = req.body || {};
     const cleanMessage = (typeof message === 'string' ? message : '').trim().slice(0, 500);
     const isEn = language === 'en' || (!language && !/[а-яіїєґ]/i.test(cleanMessage));
 
@@ -453,8 +480,14 @@ router.post('/', async (req, res) => {
 
     try {
         const categoriesList = await getCategories();
-        const searchResult = await search_products(cleanMessage, undefined, isEn ? 'en' : 'uk');
-        const foundCount = searchResult.products ? searchResult.products.length : 0;
+        const userWantsProducts = isProductSearchIntent(cleanMessage, currentProductId);
+        
+        let searchResult = { products: [] };
+        let foundCount = 0;
+        if (userWantsProducts) {
+            searchResult = await search_products(cleanMessage, undefined, isEn ? 'en' : 'uk');
+            foundCount = searchResult.products ? searchResult.products.length : 0;
+        }
 
         // Context of currently viewed product on the page (if on #/product/:id)
         let viewedProductContext = '';
@@ -523,7 +556,7 @@ router.post('/', async (req, res) => {
         // Comparison context (Scenario 3: Side-by-side comparison)
         let comparisonProducts = [];
         let comparisonContext = '';
-        const asksComparison = /порівня|сравни|різниц|разниц|що краще|что лучше| vs |проти/i.test(lowerMsg);
+        const asksComparison = /порівня|сравни|різниц|разниц|що краще|что лучше| vs |проти|compar|difference|versus|which is better/i.test(lowerMsg);
         if (asksComparison) {
             if (viewedProduct) {
                 comparisonProducts.push(viewedProduct);
@@ -545,14 +578,17 @@ router.post('/', async (req, res) => {
             }
         }
 
-        let productListText = searchResult.message || (isEn ? 'No products found.' : 'Товарів не знайдено.');
-        if (searchResult.products && searchResult.products.length > 0) {
-            productListText = searchResult.products.map(p => {
-                if (isEn) {
-                    return `- ID ${p.id}: "${p.title}" | Category: ${p.category} | Price: $${Number(p.price).toFixed(2)} | Rating: ${Number(p.avg_rating).toFixed(1)}/5 | Description: ${p.description || ''}`;
-                }
-                return `- ID ${p.id}: "${p.title_uk || p.title}" | Категорія: ${p.category} | Ціна: $${Number(p.price).toFixed(2)} | Рейтинг: ${Number(p.avg_rating).toFixed(1)}/5 | Опис: ${p.description_uk || p.description || ''}`;
-            }).join('\n');
+        let productListText = '';
+        if (userWantsProducts) {
+            productListText = searchResult.message || (isEn ? 'No products found.' : 'Товарів не знайдено.');
+            if (searchResult.products && searchResult.products.length > 0) {
+                productListText = searchResult.products.map(p => {
+                    if (isEn) {
+                        return `- ID ${p.id}: "${p.title}" | Category: ${p.category} | Price: $${Number(p.price).toFixed(2)} | Rating: ${Number(p.avg_rating).toFixed(1)}/5 | Description: ${p.description || ''}`;
+                    }
+                    return `- ID ${p.id}: "${p.title_uk || p.title}" | Категорія: ${p.category} | Ціна: $${Number(p.price).toFixed(2)} | Рейтинг: ${Number(p.avg_rating).toFixed(1)}/5 | Опис: ${p.description_uk || p.description || ''}`;
+                }).join('\n');
+            }
         }
 
         const systemInstruction = isEn
@@ -570,9 +606,9 @@ Rules:
 1. Answer in English, briefly, friendly, and politely.
 2. In your first message, state that you are Nova, the AI assistant for NovaShop.
 3. If the user asks about delivery, payment, warranty, returns, store hours, or showroom, provide accurate details based on Store Information & Policies above.
-4. Recommend products from the provided list with their name, price, and key features. Format product links as [Product Name](#/product/ID) so users can easily click and view them.
-5. Do not invent prices or products that do not exist.
-6. If products are found, describe them helpfully. If no specific products match and the query is about shopping, suggest suitable categories from the store.
+4. Recommend or suggest products ONLY when the user explicitly asks for products, recommendations, prices, or shopping advice. If the user is asking a service question (delivery, warranty, payment, order status) or greeting, answer directly and DO NOT recommend unwanted random products.
+5. If products are recommended, format product links as [Product Name](#/product/ID) so users can easily click and view them.
+6. Do not invent prices or products that do not exist.
 7. Politely decline questions that are not related to the store, products, and shopping.
 
 Products in catalog for this query:
@@ -592,9 +628,9 @@ ${viewedProductContext}${userContext}${reviewsContext}${comparisonContext}`
 1. Відповідай виключно українською мовою, коротко, дружелюбно та приязно.
 2. У своєму першому повідомленні обов'язково вкажи, що ти — AI-асистент магазину NovaShop.
 3. Якщо користувач запитує про доставку, оплату, гарантію, повернення, контакти чи шоурум — відповідай чітко, спираючись на інформацію вище.
-4. Презентуй та рекомендуй товари зі списку знайдених товарів магазину із зазначенням назви, ціни та ключових характеристик. Форматуй посилання на товар як [Назва товару](#/product/ID), щоб покупець міг клікнути!
-5. Не вигадуй ціни, наявність чи характеристики.
-6. Якщо товари знайдені — розкажи про них детально та цікаво. Якщо за специфічним словом нічого не знайдено — запропонуй відповідні доступні категорії магазину.
+4. Рекомендуй або пропонуй товари ТІЛЬКИ тоді, коли користувач прямо просить знайти, порадити або вибрати товар. Якщо користувач ставить сервісне питання (доставка, гарантія, оплата, статус замовлення) або просто вітається/дякує — відповідай на його питання і НЕ нав'язуй випадкові товари.
+5. Презентуй та рекомендуй товари зі списку знайдених товарів магазину із зазначенням назви, ціни та ключових характеристик. Форматуй посилання на товар як [Назва товару](#/product/ID), щоб покупець міг клікнути!
+6. Не вигадуй ціни, наявність чи характеристики.
 7. На запитання, які не стосуються магазину, товарів та покупок, ввічливо відмовляйся відповідати, нагадуючи, що ти асистент NovaShop.
 
 Знайдені товари в каталозі:
@@ -648,12 +684,87 @@ ${viewedProductContext}${userContext}${reviewsContext}${comparisonContext}`;
                     contents,
                     config: {
                         systemInstruction,
-                        maxOutputTokens: 500
+                        maxOutputTokens: 600
                     }
                 }),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs))
             ]);
         };
+
+        const recommendedProducts = (userWantsProducts && searchResult.products && searchResult.products.length > 0)
+            ? searchResult.products.slice(0, 3).map(p => ({
+                id: p.id,
+                title: p.title,
+                price: p.price,
+                avg_rating: p.avg_rating,
+                thumbnail: p.thumbnail,
+                stock: p.stock,
+                category: p.category
+            }))
+            : [];
+
+        const formattedComparison = comparisonProducts.map(p => ({
+            id: p.id,
+            title: p.title,
+            price: p.price,
+            avg_rating: p.avg_rating,
+            thumbnail: p.thumbnail,
+            stock: p.stock,
+            category: p.category
+        }));
+
+        const wantStream = reqStream === true || (req.headers.accept && req.headers.accept.includes('text/event-stream'));
+
+        if (wantStream) {
+            res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-cache, no-transform');
+            res.setHeader('Connection', 'keep-alive');
+            if (typeof res.flushHeaders === 'function') res.flushHeaders();
+
+            res.write(`data: ${JSON.stringify({
+                type: 'meta',
+                products: recommendedProducts,
+                comparison: formattedComparison
+            })}\n\n`);
+
+            let fullReply = '';
+            try {
+                const stream = await ai.models.generateContentStream({
+                    model: preferredModel,
+                    contents,
+                    config: {
+                        systemInstruction,
+                        maxOutputTokens: 600
+                    }
+                });
+
+                for await (const chunk of stream) {
+                    const text = chunk.text;
+                    if (text) {
+                        fullReply += text;
+                        res.write(`data: ${JSON.stringify({ type: 'delta', text })}\n\n`);
+                    }
+                }
+                res.write(`data: ${JSON.stringify({ type: 'done', reply: fullReply })}\n\n`);
+                res.end();
+                await logAssistantQuery(req.session?.user_id, clientIp, cleanMessage, fullReply, foundCount);
+                return;
+            } catch (streamErr) {
+                let fallbackResp = null;
+                for (const candidate of modelsToTry) {
+                    try {
+                        fallbackResp = await callWithTimeout(candidate, 7000);
+                        if (fallbackResp && fallbackResp.text) break;
+                    } catch {}
+                }
+                const fallbackReply = (fallbackResp && fallbackResp.text) ? fallbackResp.text.trim() : (isEn ? 'Sorry, a temporary error occurred.' : 'Вибачте, сталася тимчасова помилка.');
+                res.write(`data: ${JSON.stringify({ type: 'delta', text: fallbackReply })}\n\n`);
+                res.write(`data: ${JSON.stringify({ type: 'done', reply: fallbackReply })}\n\n`);
+                res.end();
+                await logAssistantQuery(req.session?.user_id, clientIp, cleanMessage, fallbackReply, foundCount);
+                return;
+            }
+        }
 
         let response = null;
         let lastErr = null;
@@ -677,19 +788,11 @@ ${viewedProductContext}${userContext}${reviewsContext}${comparisonContext}`;
 
         await logAssistantQuery(req.session?.user_id, clientIp, cleanMessage, reply, foundCount);
 
-        const recommendedProducts = (searchResult.products && searchResult.products.length > 0)
-            ? searchResult.products.slice(0, 3).map(p => ({
-                id: p.id,
-                title: p.title,
-                price: p.price,
-                avg_rating: p.avg_rating,
-                thumbnail: p.thumbnail,
-                stock: p.stock,
-                category: p.category
-            }))
-            : [];
-
-        return res.json({ reply, products: recommendedProducts });
+        return res.json({
+            reply,
+            products: recommendedProducts,
+            comparison: formattedComparison
+        });
     } catch (err) {
         const isQuota = err.status === 429 || (err.message && (err.message.includes('429') || err.message.includes('quota') || err.message.includes('RESOURCE_EXHAUSTED')));
         const statusCode = isQuota ? 429 : 500;

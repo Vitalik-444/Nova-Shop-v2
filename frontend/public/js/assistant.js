@@ -34,6 +34,7 @@
             status: 'В мережі',
             placeholder: 'Запитайте про товари NovaShop...',
             sendLabel: 'Надіслати',
+            micLabel: 'Голосове введення',
             typing: 'Нова пише...',
             greeting: 'Вітаю! Я Нова — ваш персональний AI-помічник NovaShop. Підкажу інформацію про товари, характеристики, доставку та оплату.',
             errorReply: 'Вибачте, виникла помилка відповіді.',
@@ -47,6 +48,7 @@
             status: 'Online',
             placeholder: 'Ask about NovaShop products...',
             sendLabel: 'Send',
+            micLabel: 'Voice input',
             typing: 'Nova is typing...',
             greeting: 'Hello! I am Nova — your personal AI shopping assistant at NovaShop. How can I help you find gadgets, discounts, or delivery details?',
             errorReply: 'Sorry, an error occurred while processing the response.',
@@ -129,12 +131,74 @@
     input.maxLength = 500;
     input.autocomplete = 'off';
 
+    var micBtn = document.createElement('button');
+    micBtn.type = 'button';
+    micBtn.className = 'nova-assistant-mic';
+    micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+
+    var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var recognition = null;
+    var isListening = false;
+    if (SpeechRec) {
+        try {
+            recognition = new SpeechRec();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = function () {
+                isListening = true;
+                micBtn.classList.add('listening');
+            };
+
+            recognition.onresult = function (event) {
+                var transcript = '';
+                for (var i = event.resultIndex; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
+                }
+                if (transcript) {
+                    input.value = transcript;
+                    input.focus();
+                }
+            };
+
+            recognition.onerror = function () {
+                isListening = false;
+                micBtn.classList.remove('listening');
+            };
+
+            recognition.onend = function () {
+                isListening = false;
+                micBtn.classList.remove('listening');
+            };
+
+            micBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (isListening) {
+                    recognition.stop();
+                } else {
+                    var lang = getLang();
+                    recognition.lang = lang === 'en' ? 'en-US' : 'uk-UA';
+                    try {
+                        recognition.start();
+                    } catch {
+                        recognition.stop();
+                    }
+                }
+            });
+        } catch {
+            micBtn.style.display = 'none';
+        }
+    } else {
+        micBtn.style.display = 'none';
+    }
+
     var sendBtn = document.createElement('button');
     sendBtn.type = 'submit';
     sendBtn.className = 'nova-assistant-send';
     sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
 
     form.appendChild(input);
+    form.appendChild(micBtn);
     form.appendChild(sendBtn);
 
     chatWindow.appendChild(header);
@@ -154,6 +218,8 @@
         closeBtn.setAttribute('aria-label', texts.closeLabel);
         resetBtn.setAttribute('aria-label', texts.clearLabel);
         resetBtn.title = texts.clearLabel;
+        micBtn.setAttribute('aria-label', texts.micLabel);
+        micBtn.title = texts.micLabel;
         sendBtn.setAttribute('aria-label', texts.sendLabel);
         if (typingLabel) typingLabel.textContent = texts.typing;
     }
@@ -200,6 +266,67 @@
             });
             wrap.appendChild(chip);
         });
+        messagesList.appendChild(wrap);
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
+    function addComparisonCards(comparison) {
+        if (!Array.isArray(comparison) || comparison.length < 2) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'nova-comparison-wrap';
+
+        var lang = getLang();
+        var headerTitle = lang === 'en' ? '⚖️ Product Comparison' : '⚖️ Порівняння товарів';
+        var addText = lang === 'en' ? 'Add' : 'В кошик';
+        var addedText = lang === 'en' ? 'Added' : 'Додано';
+
+        var headerEl = document.createElement('div');
+        headerEl.className = 'nova-comparison-header';
+        headerEl.textContent = headerTitle;
+        wrap.appendChild(headerEl);
+
+        var grid = document.createElement('div');
+        grid.className = 'nova-comparison-grid';
+
+        comparison.slice(0, 2).forEach(function (p) {
+            var col = document.createElement('div');
+            col.className = 'nova-compare-col';
+
+            var imgUrl = p.thumbnail || '/images/banner.png';
+            var rating = p.avg_rating ? Number(p.avg_rating).toFixed(1) : '5.0';
+            var priceFormatted = '$' + Number(p.price).toFixed(2);
+            var safeTitle = String(p.title || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            col.innerHTML =
+                '<div class="nova-compare-thumb"><img src="' + imgUrl + '" alt="" onerror="this.src=\'/images/banner.png\';" /></div>' +
+                '<a href="#/product/' + p.id + '" class="nova-compare-title" title="' + safeTitle + '">' + safeTitle + '</a>' +
+                '<div class="nova-compare-meta">' +
+                    '<span class="nova-compare-price">' + priceFormatted + '</span>' +
+                    '<span class="nova-compare-rating">★ ' + rating + '</span>' +
+                '</div>' +
+                '<button type="button" class="nova-compare-buy-btn" data-id="' + p.id + '">' +
+                    '<i class="fa-solid fa-cart-plus"></i> ' + addText +
+                '</button>';
+
+            var buyBtn = col.querySelector('.nova-compare-buy-btn');
+            buyBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                window.dispatchEvent(new CustomEvent('novashop:add-to-cart', { detail: { id: p.id, quantity: 1 } }));
+                buyBtn.classList.add('added');
+                buyBtn.innerHTML = '<i class="fa-solid fa-check"></i> ' + addedText;
+                setTimeout(function () {
+                    buyBtn.classList.remove('added');
+                    buyBtn.innerHTML = '<i class="fa-solid fa-cart-plus"></i> ' + addText;
+                }, 2200);
+            });
+
+            grid.appendChild(col);
+        });
+
+        wrap.appendChild(grid);
         messagesList.appendChild(wrap);
         messagesList.scrollTop = messagesList.scrollHeight;
     }
@@ -288,7 +415,6 @@
 
         if (prodId) {
             var prodTitle = (document.querySelector('.nv-page-title, .product-title, h1') || {}).textContent || '';
-            var badgeText = currentLang === 'en' ? 'Viewing product' : 'Переглядається товар';
             addMessage('model', currentLang === 'en'
                 ? 'Hello! I see you are looking at **' + (prodTitle.trim() || 'this item') + '**. Would you like to know more about its specs, warranty, or see alternatives?'
                 : 'Вітаю! Бачу, ви дивитесь **' + (prodTitle.trim() || 'цей товар') + '**. Підказати характеристики, наявність чи підібрати альтернативи?');
@@ -350,42 +476,106 @@
         showTyping();
 
         isLoading = true;
-        input.disabled = true;
+        // User can still write/type while the assistant generates an answer:
+        // input remains ENABLED, only the submit button is disabled.
         sendBtn.disabled = true;
 
         var controller = new AbortController();
         var timeoutId = setTimeout(function () {
             controller.abort();
-        }, 15000);
+        }, 30000);
 
         try {
             var res = await fetch('/api/assistant', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'text/event-stream, application/json'
+                },
                 signal: controller.signal,
                 body: JSON.stringify({
                     message: text,
                     history: history,
                     language: activeLang,
-                    currentProductId: currentProdId
+                    currentProductId: currentProdId,
+                    stream: true
                 })
             });
             clearTimeout(timeoutId);
 
-            var data = await res.json();
-            hideTyping();
+            var contentType = res.headers.get('content-type') || '';
+            if (res.ok && contentType.includes('text/event-stream') && res.body && window.ReadableStream) {
+                var botMsg = document.createElement('div');
+                botMsg.className = 'nova-msg nova-msg-bot';
+                botMsg.innerHTML = '';
+                messagesList.appendChild(botMsg);
 
-            var replyText = (data && data.reply) ? data.reply : activeTexts.errorReply;
-            addMessage('model', replyText);
+                var reader = res.body.getReader();
+                var decoder = new TextDecoder('utf-8');
+                var buffer = '';
+                var accumulatedReply = '';
+                var metaData = null;
 
-            if (data && Array.isArray(data.products) && data.products.length > 0) {
-                addProductCards(data.products);
-            }
+                while (true) {
+                    var chunk = await reader.read();
+                    if (chunk.done) break;
+                    buffer += decoder.decode(chunk.value, { stream: true });
+                    var lines = buffer.split('\n\n');
+                    buffer = lines.pop();
 
-            history.push({ role: 'user', content: text });
-            history.push({ role: 'model', content: replyText });
-            if (history.length > 20) {
-                history = history.slice(-20);
+                    for (var i = 0; i < lines.length; i++) {
+                        var rawLine = lines[i].trim();
+                        if (!rawLine.startsWith('data:')) continue;
+                        var jsonStr = rawLine.slice(5).trim();
+                        if (!jsonStr) continue;
+                        try {
+                            var evt = JSON.parse(jsonStr);
+                            if (evt.type === 'meta') {
+                                metaData = evt;
+                            } else if (evt.type === 'delta') {
+                                hideTyping();
+                                accumulatedReply += (evt.text || '');
+                                botMsg.innerHTML = formatMessageHtml(accumulatedReply);
+                                messagesList.scrollTop = messagesList.scrollHeight;
+                            } else if (evt.type === 'done') {
+                                hideTyping();
+                                if (evt.reply) {
+                                    accumulatedReply = evt.reply;
+                                }
+                                botMsg.innerHTML = formatMessageHtml(accumulatedReply);
+                                messagesList.scrollTop = messagesList.scrollHeight;
+                            }
+                        } catch (parseErr) {}
+                    }
+                }
+                hideTyping();
+                if (!accumulatedReply) {
+                    accumulatedReply = activeTexts.errorReply;
+                    botMsg.innerHTML = formatMessageHtml(accumulatedReply);
+                }
+                if (metaData && Array.isArray(metaData.comparison) && metaData.comparison.length >= 2) {
+                    addComparisonCards(metaData.comparison);
+                }
+                if (metaData && Array.isArray(metaData.products) && metaData.products.length > 0) {
+                    addProductCards(metaData.products);
+                }
+                history.push({ role: 'user', content: text });
+                history.push({ role: 'model', content: accumulatedReply });
+                if (history.length > 20) history = history.slice(-20);
+            } else {
+                var data = await res.json();
+                hideTyping();
+                var replyText = (data && data.reply) ? data.reply : activeTexts.errorReply;
+                addMessage('model', replyText);
+                if (data && Array.isArray(data.comparison) && data.comparison.length >= 2) {
+                    addComparisonCards(data.comparison);
+                }
+                if (data && Array.isArray(data.products) && data.products.length > 0) {
+                    addProductCards(data.products);
+                }
+                history.push({ role: 'user', content: text });
+                history.push({ role: 'model', content: replyText });
+                if (history.length > 20) history = history.slice(-20);
             }
         } catch {
             clearTimeout(timeoutId);
@@ -393,7 +583,6 @@
             addMessage('model', activeTexts.networkError);
         } finally {
             isLoading = false;
-            input.disabled = false;
             sendBtn.disabled = false;
             input.focus();
         }

@@ -475,6 +475,160 @@
     text-overflow: ellipsis;
 }
 
+/* Voice input button */
+.nova-assistant-mic {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--panel-2, var(--bg, #f5f5f5));
+    color: var(--text, #222222);
+    border: 1px solid var(--line, var(--border, #e4e4e4));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.nova-assistant-mic:hover {
+    color: var(--accent, #00A046);
+    border-color: var(--accent, #00A046);
+}
+
+.nova-assistant-mic.listening {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+    animation: novaMicPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes novaMicPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Side-by-side product comparison */
+.nova-comparison-wrap {
+    margin: 8px 0 6px;
+    width: 100%;
+}
+
+.nova-comparison-header {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text, #222);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nova-comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.nova-compare-col {
+    background: var(--panel-2, #f5f5f5);
+    border: 1px solid var(--line, #e4e4e4);
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s, border-color 0.15s;
+}
+
+.nova-compare-col:hover {
+    border-color: rgba(var(--accent-rgb, 0, 160, 70), 0.4);
+    transform: translateY(-1px);
+}
+
+.nova-compare-thumb {
+    width: 100%;
+    height: 70px;
+    border-radius: 8px;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+    border: 1px solid var(--line, #e4e4e4);
+}
+
+.nova-compare-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.nova-compare-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text, #222);
+    text-decoration: none;
+    line-height: 1.25;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.nova-compare-title:hover {
+    color: var(--accent, #00A046);
+}
+
+.nova-compare-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    margin: 4px 0 6px;
+}
+
+.nova-compare-price {
+    font-weight: 800;
+    color: var(--accent, #00A046);
+}
+
+.nova-compare-rating {
+    font-size: 11px;
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.nova-compare-buy-btn {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--accent, #00A046);
+    color: var(--accent-ink, #ffffff);
+    border: none;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.nova-compare-buy-btn:hover {
+    filter: brightness(1.1);
+}
+
+.nova-compare-buy-btn.added {
+    background: #10b981;
+}
+
 @media (max-width: 640px) {
     .nova-assistant-trigger {
         bottom: 85px;
