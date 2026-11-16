@@ -43,6 +43,14 @@ app.use('/api/favorites.php', require('./server/routes/favorites'));
 app.use('/api/viewed.php', require('./server/routes/viewed'));
 app.use('/api/viewed', require('./server/routes/viewed'));
 
+// SPA fallback for all non-API routes
+app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'Endpoint not found' });
+    }
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on http://0.0.0.0:${PORT}`);

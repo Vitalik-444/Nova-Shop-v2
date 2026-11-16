@@ -16,6 +16,7 @@ const Orders = lazy(() => import("./pages/Orders"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Assistant = lazy(() => import("./pages/Assistant"));
+const InfoPage = lazy(() => import("./pages/InfoPage"));
 
 export default function App() {
   return (
@@ -33,6 +34,13 @@ export default function App() {
           <Route path="profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="settings" element={<Settings />} />
           <Route path="assistant" element={<Assistant />} />
+          <Route path="delivery" element={<InfoPage tab="delivery" />} />
+          <Route path="payment" element={<InfoPage tab="payment" />} />
+          <Route path="warranty" element={<InfoPage tab="warranty" />} />
+          <Route path="about" element={<InfoPage tab="about" />} />
+          <Route path="about-us" element={<Navigate to="/about" replace />} />
+          <Route path="contacts" element={<InfoPage tab="contacts" />} />
+          <Route path="news" element={<InfoPage tab="news" />} />
           <Route path="orders" element={<RequireAuth><Orders /></RequireAuth>} />
           <Route path="admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />

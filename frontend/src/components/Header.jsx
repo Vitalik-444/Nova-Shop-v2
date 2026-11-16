@@ -353,6 +353,15 @@ export default function Header() {
             </Link>
           ))}
         </div>
+        <div className="nv-dropdown-title">{t("buyers")} & {t("company")}</div>
+        <div className="nv-drawer-links" style={{ padding: "0 16px 20px" }}>
+          <Link to="/delivery"><i className="fa-solid fa-truck-fast"></i> {t("delivery")}</Link>
+          <Link to="/payment"><i className="fa-solid fa-credit-card"></i> {t("payment")}</Link>
+          <Link to="/warranty"><i className="fa-solid fa-shield-halved"></i> {t("warranty")}</Link>
+          <Link to="/about"><i className="fa-solid fa-building"></i> {t("aboutUs")}</Link>
+          <Link to="/contacts"><i className="fa-solid fa-phone-volume"></i> {t("contacts")}</Link>
+          <Link to="/news"><i className="fa-solid fa-newspaper"></i> {t("news")}</Link>
+        </div>
       </aside>
     </header>
   );

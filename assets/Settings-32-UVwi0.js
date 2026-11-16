@@ -1,0 +1,1 @@
+import{j as t}from"./index-BL2lqQqw.js";import{S as i}from"./SettingsView-BuSTAP4F.js";import"./format-DDBXXK_X.js";function n(){return t.jsx("div",{className:"container",style:{padding:"40px 0 60px"},children:t.jsx(i,{})})}export{n as default};
