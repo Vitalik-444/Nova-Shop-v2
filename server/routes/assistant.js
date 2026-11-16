@@ -534,7 +534,8 @@ Rules:
 7. Politely decline questions that are not related to the store, products, and shopping.
 
 Products in catalog for this query:
-${productListText}`
+${productListText}
+${viewedProductContext}${userContext}`
             : `Ти — Нова, віртуальний AI-асистент покупців сучасного інтернет-магазину NovaShop.
 Ти маєш повний доступ до каталогу товарів магазину (понад 190 товарів у 24 категоріях, включаючи ноутбуки, смартфони, меблі, парфумерію, красу, продукти, декор тощо).
 Доступні категорії: ${categoriesList.join(', ')}
@@ -555,7 +556,8 @@ ${productListText}`
 7. На запитання, які не стосуються магазину, товарів та покупок, ввічливо відмовляйся відповідати, нагадуючи, що ти асистент NovaShop.
 
 Знайдені товари в каталозі:
-${productListText}`;
+${productListText}
+${viewedProductContext}${userContext}`;
 
         const contents = [];
         let lastRole = null;
@@ -633,7 +635,19 @@ ${productListText}`;
 
         await logAssistantQuery(req.session?.user_id, clientIp, cleanMessage, reply, foundCount);
 
-        return res.json({ reply });
+        const recommendedProducts = (searchResult.products && searchResult.products.length > 0)
+            ? searchResult.products.slice(0, 3).map(p => ({
+                id: p.id,
+                title: p.title,
+                price: p.price,
+                avg_rating: p.avg_rating,
+                thumbnail: p.thumbnail,
+                stock: p.stock,
+                category: p.category
+            }))
+            : [];
+
+        return res.json({ reply, products: recommendedProducts });
     } catch (err) {
         const isQuota = err.status === 429 || (err.message && (err.message.includes('429') || err.message.includes('quota') || err.message.includes('RESOURCE_EXHAUSTED')));
         const statusCode = isQuota ? 429 : 500;

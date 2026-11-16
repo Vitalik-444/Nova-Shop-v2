@@ -16,16 +16,26 @@
         return htmlLang.toLowerCase().startsWith('en') ? 'en' : 'uk';
     }
 
+    function getCurrentProductContext() {
+        var hash = window.location.hash || '';
+        var match = hash.match(/#\/product\/(\d+)/);
+        if (match && match[1]) {
+            return parseInt(match[1], 10);
+        }
+        return null;
+    }
+
     var i18n = {
         uk: {
             title: 'Нова',
             triggerLabel: 'Чат з асистентом Нова',
             closeLabel: 'Закрити',
+            clearLabel: 'Почати заново',
             status: 'В мережі',
             placeholder: 'Запитайте про товари NovaShop...',
             sendLabel: 'Надіслати',
             typing: 'Нова пише...',
-            greeting: 'Вітаю! Я Нова — ваш віртуальний AI-асистент магазину NovaShop. Підкажу інформацію про товари, ціни та наявність. Чим можу допомогти?',
+            greeting: 'Вітаю! Я Нова — ваш персональний AI-помічник NovaShop. Підкажу інформацію про товари, характеристики, доставку та оплату.',
             errorReply: 'Вибачте, виникла помилка відповіді.',
             networkError: 'Не вдалося зв\'язатися з сервером. Перевірте підключення до мережі.'
         },
@@ -33,11 +43,12 @@
             title: 'Nova',
             triggerLabel: 'Chat with Nova Assistant',
             closeLabel: 'Close',
+            clearLabel: 'Start over',
             status: 'Online',
             placeholder: 'Ask about NovaShop products...',
             sendLabel: 'Send',
             typing: 'Nova is typing...',
-            greeting: 'Hello! I am Nova — your virtual AI assistant for NovaShop. I can help with products, prices, and availability. How can I help you?',
+            greeting: 'Hello! I am Nova — your personal AI shopping assistant at NovaShop. How can I help you find gadgets, discounts, or delivery details?',
             errorReply: 'Sorry, an error occurred while processing the response.',
             networkError: 'Unable to connect to the server. Please check your network connection.'
         }
@@ -71,6 +82,7 @@
     var statusDot = document.createElement('span');
     statusDot.className = 'nova-status-dot';
     var statusText = document.createElement('span');
+    statusText.textContent = 'В мережі';
     status.appendChild(statusDot);
     status.appendChild(statusText);
 
@@ -80,12 +92,30 @@
     brand.appendChild(avatar);
     brand.appendChild(titlesWrap);
 
+    var headerActions = document.createElement('div');
+    headerActions.style.display = 'flex';
+    headerActions.style.alignItems = 'center';
+    headerActions.style.gap = '6px';
+
+    var resetBtn = document.createElement('button');
+    resetBtn.className = 'nova-assistant-close';
+    resetBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i>';
+    resetBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        history = [];
+        messagesList.innerHTML = '';
+        renderInitialGreeting();
+    });
+
     var closeBtn = document.createElement('button');
     closeBtn.className = 'nova-assistant-close';
     closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
 
+    headerActions.appendChild(resetBtn);
+    headerActions.appendChild(closeBtn);
+
     header.appendChild(brand);
-    header.appendChild(closeBtn);
+    header.appendChild(headerActions);
 
     var messagesList = document.createElement('div');
     messagesList.className = 'nova-assistant-messages';
@@ -122,6 +152,8 @@
         input.placeholder = texts.placeholder;
         triggerBtn.setAttribute('aria-label', texts.triggerLabel);
         closeBtn.setAttribute('aria-label', texts.closeLabel);
+        resetBtn.setAttribute('aria-label', texts.clearLabel);
+        resetBtn.title = texts.clearLabel;
         sendBtn.setAttribute('aria-label', texts.sendLabel);
         if (typingLabel) typingLabel.textContent = texts.typing;
     }
@@ -172,6 +204,60 @@
         messagesList.scrollTop = messagesList.scrollHeight;
     }
 
+    function addProductCards(products) {
+        if (!Array.isArray(products) || !products.length) return;
+        var container = document.createElement('div');
+        container.className = 'nova-product-cards';
+
+        var lang = getLang();
+        var addText = lang === 'en' ? 'Add' : 'В кошик';
+        var addedText = lang === 'en' ? 'Added' : 'Додано';
+
+        products.forEach(function (p) {
+            var card = document.createElement('div');
+            card.className = 'nova-product-card';
+
+            var imgUrl = p.thumbnail || '/images/banner.png';
+            var rating = p.avg_rating ? Number(p.avg_rating).toFixed(1) : '5.0';
+            var priceFormatted = '$' + Number(p.price).toFixed(2);
+
+            var safeTitle = String(p.title || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            card.innerHTML =
+                '<div class="nova-card-thumb"><img src="' + imgUrl + '" alt="" onerror="this.src=\'/images/banner.png\';" /></div>' +
+                '<div class="nova-card-info">' +
+                    '<a href="#/product/' + p.id + '" class="nova-card-title" title="' + safeTitle + '">' + safeTitle + '</a>' +
+                    '<div class="nova-card-meta">' +
+                        '<span class="nova-card-price">' + priceFormatted + '</span>' +
+                        '<span class="nova-card-rating">★ ' + rating + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<button type="button" class="nova-card-buy-btn" data-id="' + p.id + '">' +
+                    '<i class="fa-solid fa-cart-plus"></i> ' + addText +
+                '</button>';
+
+            var buyBtn = card.querySelector('.nova-card-buy-btn');
+            buyBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                window.dispatchEvent(new CustomEvent('novashop:add-to-cart', { detail: { id: p.id, quantity: 1 } }));
+                buyBtn.classList.add('added');
+                buyBtn.innerHTML = '<i class="fa-solid fa-check"></i> ' + addedText;
+                setTimeout(function () {
+                    buyBtn.classList.remove('added');
+                    buyBtn.innerHTML = '<i class="fa-solid fa-cart-plus"></i> ' + addText;
+                }, 2200);
+            });
+
+            container.appendChild(card);
+        });
+
+        messagesList.appendChild(container);
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
     var typingIndicator = document.createElement('div');
     typingIndicator.className = 'nova-typing';
     var dots = document.createElement('div');
@@ -196,13 +282,29 @@
         }
     }
 
-    updateTexts();
+    function renderInitialGreeting() {
+        var currentLang = getLang();
+        var prodId = getCurrentProductContext();
 
-    var initialLang = getLang();
-    addMessage('model', (i18n[initialLang] || i18n.uk).greeting);
-    addChips(initialLang === 'en'
-        ? ['🚚 Delivery terms', '💳 Installment 0%', '🛡️ Warranty & returns', '💻 Recommend laptops']
-        : ['🚚 Умови доставки', '💳 Оплата частинами 0%', '🛡️ Гарантія та повернення', '💻 Порадь ноутбук']);
+        if (prodId) {
+            var prodTitle = (document.querySelector('.nv-page-title, .product-title, h1') || {}).textContent || '';
+            var badgeText = currentLang === 'en' ? 'Viewing product' : 'Переглядається товар';
+            addMessage('model', currentLang === 'en'
+                ? 'Hello! I see you are looking at **' + (prodTitle.trim() || 'this item') + '**. Would you like to know more about its specs, warranty, or see alternatives?'
+                : 'Вітаю! Бачу, ви дивитесь **' + (prodTitle.trim() || 'цей товар') + '**. Підказати характеристики, наявність чи підібрати альтернативи?');
+            addChips(currentLang === 'en'
+                ? ['🔍 Key specs', '🛡️ Warranty & returns', '💡 Cheaper alternatives', '💳 0% Installment']
+                : ['🔍 Головні характеристики', '🛡️ Гарантія на цей товар', '💡 Дешевші аналоги', '💳 Оплата частинами 0%']);
+        } else {
+            addMessage('model', (i18n[currentLang] || i18n.uk).greeting);
+            addChips(currentLang === 'en'
+                ? ['🚚 Delivery terms', '💳 Installment 0%', '🛡️ Warranty & returns', '💻 Recommend laptops']
+                : ['🚚 Умови доставки', '💳 Оплата частинами 0%', '🛡️ Гарантія та повернення', '💻 Порадь ноутбук']);
+        }
+    }
+
+    updateTexts();
+    renderInitialGreeting();
 
     try {
         new MutationObserver(function () {
@@ -241,6 +343,7 @@
 
         var activeLang = getLang();
         var activeTexts = i18n[activeLang] || i18n.uk;
+        var currentProdId = getCurrentProductContext();
 
         input.value = '';
         addMessage('user', text);
@@ -263,7 +366,8 @@
                 body: JSON.stringify({
                     message: text,
                     history: history,
-                    language: activeLang
+                    language: activeLang,
+                    currentProductId: currentProdId
                 })
             });
             clearTimeout(timeoutId);
@@ -273,6 +377,10 @@
 
             var replyText = (data && data.reply) ? data.reply : activeTexts.errorReply;
             addMessage('model', replyText);
+
+            if (data && Array.isArray(data.products) && data.products.length > 0) {
+                addProductCards(data.products);
+            }
 
             history.push({ role: 'user', content: text });
             history.push({ role: 'model', content: replyText });
