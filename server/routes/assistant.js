@@ -503,6 +503,48 @@ router.post('/', async (req, res) => {
                 : `\nПримітка: Користувач не авторизований (гість). Якщо він запитує про власні замовлення чи кошик, ввічливо запропонуй йому [Увійти](#/login).\n`;
         }
 
+        // Reviews context (Scenario 4: Review Summarization)
+        let reviewsContext = '';
+        const asksReviews = /відгук|отзыв|review|враженн|думк|що кажуть/i.test(lowerMsg);
+        if (asksReviews && viewedProduct) {
+            const reviews = await get_product_reviews(viewedProduct.id);
+            if (reviews && reviews.length > 0) {
+                const reviewsText = reviews.map(r => `- ${r.rating}★ [${r.user_name}]: "${r.comment}"`).join('\n');
+                reviewsContext = isEn
+                    ? `\nREAL CUSTOMER REVIEWS FROM DATABASE FOR THIS PRODUCT:\n${reviewsText}\nRule: Summarize what real customers like (Pros) and dislike (Cons). Provide a concise verdict with average score.\n`
+                    : `\nРЕАЛЬНІ ВІДГУКИ ПОКУПЦІВ З БАЗИ МАГАЗИНУ ДЛЯ ЦЬОГО ТОВАРУ:\n${reviewsText}\nПравило: Підсумуй, що подобається покупцям (Плюси) і що не подобається (Мінуси). Надай стислий підсумок із середнім балом.\n`;
+            } else {
+                reviewsContext = isEn
+                    ? `\nNote: There are no customer reviews in the database yet for this product. Mention this honestly, noting the store's official warranty.\n`
+                    : `\nПримітка: У базі магазину поки що немає текстових відгуків на цей товар. Вкажи це чесно та нагадай про офіційну гарантію магазину.\n`;
+            }
+        }
+
+        // Comparison context (Scenario 3: Side-by-side comparison)
+        let comparisonProducts = [];
+        let comparisonContext = '';
+        const asksComparison = /порівня|сравни|різниц|разниц|що краще|что лучше| vs |проти/i.test(lowerMsg);
+        if (asksComparison) {
+            if (viewedProduct) {
+                comparisonProducts.push(viewedProduct);
+                if (searchResult.products) {
+                    for (const p of searchResult.products) {
+                        if (p.id !== viewedProduct.id) {
+                            comparisonProducts.push(p);
+                            break;
+                        }
+                    }
+                }
+            } else if (searchResult.products && searchResult.products.length >= 2) {
+                comparisonProducts = searchResult.products.slice(0, 2);
+            }
+            if (comparisonProducts.length >= 2) {
+                comparisonContext = isEn
+                    ? `\nPRODUCT COMPARISON REQUEST:\nCompare "${comparisonProducts[0].title}" ($${comparisonProducts[0].price}) vs "${comparisonProducts[1].title}" ($${comparisonProducts[1].price}). Highlight key differences in price, specs, and give a recommendation for who each product suits best.\n`
+                    : `\nЗАПИТ НА ПОРІВНЯННЯ ТОВАРІВ:\nПорівняй "${comparisonProducts[0].title}" ($${comparisonProducts[0].price}) та "${comparisonProducts[1].title}" ($${comparisonProducts[1].price}). Виділи ключові відмінності в ціні, характеристиках та підкажи, кому яка модель підійде краще.\n`;
+            }
+        }
+
         let productListText = searchResult.message || (isEn ? 'No products found.' : 'Товарів не знайдено.');
         if (searchResult.products && searchResult.products.length > 0) {
             productListText = searchResult.products.map(p => {
@@ -535,7 +577,7 @@ Rules:
 
 Products in catalog for this query:
 ${productListText}
-${viewedProductContext}${userContext}`
+${viewedProductContext}${userContext}${reviewsContext}${comparisonContext}`
             : `Ти — Нова, віртуальний AI-асистент покупців сучасного інтернет-магазину NovaShop.
 Ти маєш повний доступ до каталогу товарів магазину (понад 190 товарів у 24 категоріях, включаючи ноутбуки, смартфони, меблі, парфумерію, красу, продукти, декор тощо).
 Доступні категорії: ${categoriesList.join(', ')}
@@ -557,7 +599,7 @@ ${viewedProductContext}${userContext}`
 
 Знайдені товари в каталозі:
 ${productListText}
-${viewedProductContext}${userContext}`;
+${viewedProductContext}${userContext}${reviewsContext}${comparisonContext}`;
 
         const contents = [];
         let lastRole = null;
