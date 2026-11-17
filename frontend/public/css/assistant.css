@@ -186,6 +186,10 @@
     transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
+.nova-msg:empty {
+    display: none !important;
+}
+
 .nova-msg-user {
     align-self: flex-end;
     background: var(--accent, #00A046);

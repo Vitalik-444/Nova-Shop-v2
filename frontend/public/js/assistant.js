@@ -505,10 +505,17 @@
 
             var contentType = res.headers.get('content-type') || '';
             if (res.ok && contentType.includes('text/event-stream') && res.body && window.ReadableStream) {
-                var botMsg = document.createElement('div');
-                botMsg.className = 'nova-msg nova-msg-bot';
-                botMsg.innerHTML = '';
-                messagesList.appendChild(botMsg);
+                var botMsg = null;
+
+                function ensureBotMsg() {
+                    if (!botMsg) {
+                        hideTyping();
+                        botMsg = document.createElement('div');
+                        botMsg.className = 'nova-msg nova-msg-bot';
+                        messagesList.appendChild(botMsg);
+                    }
+                    return botMsg;
+                }
 
                 var reader = res.body.getReader();
                 var decoder = new TextDecoder('utf-8');
@@ -533,16 +540,16 @@
                             if (evt.type === 'meta') {
                                 metaData = evt;
                             } else if (evt.type === 'delta') {
-                                hideTyping();
+                                var el = ensureBotMsg();
                                 accumulatedReply += (evt.text || '');
-                                botMsg.innerHTML = formatMessageHtml(accumulatedReply);
+                                el.innerHTML = formatMessageHtml(accumulatedReply);
                                 messagesList.scrollTop = messagesList.scrollHeight;
                             } else if (evt.type === 'done') {
-                                hideTyping();
+                                var el = ensureBotMsg();
                                 if (evt.reply) {
                                     accumulatedReply = evt.reply;
                                 }
-                                botMsg.innerHTML = formatMessageHtml(accumulatedReply);
+                                el.innerHTML = formatMessageHtml(accumulatedReply);
                                 messagesList.scrollTop = messagesList.scrollHeight;
                             }
                         } catch (parseErr) {}
@@ -551,7 +558,8 @@
                 hideTyping();
                 if (!accumulatedReply) {
                     accumulatedReply = activeTexts.errorReply;
-                    botMsg.innerHTML = formatMessageHtml(accumulatedReply);
+                    var el = ensureBotMsg();
+                    el.innerHTML = formatMessageHtml(accumulatedReply);
                 }
                 if (metaData && Array.isArray(metaData.comparison) && metaData.comparison.length >= 2) {
                     addComparisonCards(metaData.comparison);
