@@ -101,6 +101,9 @@ async function ensureAppRole(client, dbName) {
 
             let sql = fs.readFileSync(path.join(SQL_DIR, file), 'utf8');
             if (!hasAppUser) {
+                // Видаляємо як цілі блоки DO $$ ... app_user ... $$;, так і окремі GRANT ... TO app_user;
+                // щоб не залишати порожні конструкції IF ... THEN END IF; які спричиняють синтаксичну помилку в PL/pgSQL
+                sql = sql.replace(/DO\s+\$\$[\s\S]*?pg_roles[\s\S]*?app_user[\s\S]*?\$\$;/gi, '-- [cloud-db] skipped app_user DO block');
                 sql = sql.replace(/GRANT\s+[^;]+TO\s+app_user\s*;/gi, '-- [cloud-db] skipped grant to app_user');
             }
 

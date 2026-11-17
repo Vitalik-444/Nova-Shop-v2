@@ -29,6 +29,13 @@ app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use('/css', express.static(path.join(__dirname, 'css')));
+
+// Пряма роздача фавіконок з кореня
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'images', 'favicon.ico')));
+app.get('/favicon.svg', (req, res) => res.sendFile(path.join(__dirname, 'images', 'favicon.svg')));
+app.get('/favicon-32.png', (req, res) => res.sendFile(path.join(__dirname, 'images', 'favicon-32.png')));
+app.get('/apple-touch-icon.png', (req, res) => res.sendFile(path.join(__dirname, 'images', 'apple-touch-icon.png')));
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 // API Routes (URL збережені, щоб фронтенд працював без змін)

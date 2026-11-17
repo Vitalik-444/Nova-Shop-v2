@@ -92,15 +92,30 @@ BEGIN
 END $$;
 
 -- 6. Оновлення послідовностей (sequences)
-SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT max(id) FROM users), 1), (SELECT max(id) FROM users) IS NOT NULL);
-SELECT setval(pg_get_serial_sequence('orders', 'id'), COALESCE((SELECT max(id) FROM orders), 1), (SELECT max(id) FROM orders) IS NOT NULL);
+DO $$
+DECLARE
+    seq text;
+BEGIN
+    seq := pg_get_serial_sequence('users', 'id');
+    IF seq IS NOT NULL THEN
+        PERFORM setval(seq, COALESCE((SELECT max(id) FROM users), 1), (SELECT max(id) FROM users) IS NOT NULL);
+    END IF;
+    seq := pg_get_serial_sequence('orders', 'id');
+    IF seq IS NOT NULL THEN
+        PERFORM setval(seq, COALESCE((SELECT max(id) FROM orders), 1), (SELECT max(id) FROM orders) IS NOT NULL);
+    END IF;
+END $$;
 
 -- 7. Надання прав ролі app_user
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_user') THEN
-        GRANT SELECT, INSERT, UPDATE, DELETE ON users, orders, order_items TO app_user;
-        GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
+        BEGIN
+            GRANT SELECT, INSERT, UPDATE, DELETE ON users, orders, order_items TO app_user;
+            GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
+        EXCEPTION WHEN OTHERS THEN
+            NULL;
+        END;
     END IF;
 END $$;
 `;
