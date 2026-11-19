@@ -17,150 +17,196 @@ async function seedAnalytics() {
 
         // 2. Add realistic Ukrainian test users
         const testUsers = [
-            {
-                name: 'Василь Романюк',
-                email: 'vasyl.romaniuk@gmail.com',
-                phone: '+380501239874',
-                city: 'Чернівці',
-                address: 'вул. Головна, 45, кв. 12',
-                postcode: '58000',
-                daysAgo: 27
-            },
-            {
-                name: 'Вікторія Ковальчук',
-                email: 'viktoriia.kovalchuk@gmail.com',
-                phone: '+380679812345',
-                city: 'Одеса',
-                address: 'просп. Шевченка, 14, кв. 8',
-                postcode: '65000',
-                daysAgo: 25
-            },
-            {
-                name: 'Ярослав Поліщук',
-                email: 'yaroslav.polishchuk@gmail.com',
-                phone: '+380931234876',
-                city: 'Луцьк',
-                address: 'просп. Волі, 21',
-                postcode: '43000',
-                daysAgo: 23
-            },
-            {
-                name: 'Анастасія Мельничук',
-                email: 'anastasiia.melnychuk@gmail.com',
-                phone: '+380975544112',
-                city: 'Київ',
-                address: 'вул. Оболонська, 15, кв. 72',
-                postcode: '04210',
-                daysAgo: 20
-            },
-            {
-                name: 'Артем Бойко',
-                email: 'artem.boyko@ukr.net',
-                phone: '+380682233991',
-                city: 'Запоріжжя',
-                address: 'просп. Соборний, 88',
-                postcode: '69000',
-                daysAgo: 19
-            },
-            {
-                name: 'Оксана Кузьменко',
-                email: 'oksana.kuzmenko@gmail.com',
-                phone: '+380993344882',
-                city: 'Полтава',
-                address: 'вул. Котляревського, 10, кв. 4',
-                postcode: '36000',
-                daysAgo: 17
-            },
-            {
-                name: 'Сергій Васильєв',
-                email: 'serhii.vasyliev@gmail.com',
-                phone: '+380637788119',
-                city: 'Харків',
-                address: 'вул. Пушкінська, 64',
-                postcode: '61000',
-                daysAgo: 15
-            },
-            {
-                name: 'Марія Олійник',
-                email: 'mariia.oliynyk@gmail.com',
-                phone: '+380509988223',
-                city: 'Львів',
-                address: 'вул. Личаківська, 52, кв. 6',
-                postcode: '79000',
-                daysAgo: 13
-            },
-            {
-                name: 'Павло Ткач',
-                email: 'pavlo.tkach@gmail.com',
-                phone: '+380671122998',
-                city: 'Рівне',
-                address: 'вул. Соборна, 112',
-                postcode: '33000',
-                daysAgo: 11
-            },
-            {
-                name: 'Тетяна Литвин',
-                email: 'tetiana.lytvyn@gmail.com',
-                phone: '+380934455667',
-                city: 'Тернопіль',
-                address: 'вул. Руська, 18, кв. 3',
-                postcode: '46000',
-                daysAgo: 9
-            },
-            {
-                name: 'Роман Гриценко',
-                email: 'roman.hrytsenko@ukr.net',
-                phone: '+380986655443',
-                city: 'Ужгород',
-                address: 'вул. Корзо, 7',
-                postcode: '88000',
-                daysAgo: 7
-            },
-            {
-                name: 'Катерина Марченко',
-                email: 'kateryna.marchenko@gmail.com',
-                phone: '+380663322118',
-                city: 'Дніпро',
-                address: 'просп. Дмитра Яворницького, 40',
-                postcode: '49000',
-                daysAgo: 5
-            },
-            {
-                name: 'Владислав Сидоренко',
-                email: 'vladyslav.sydorenko@gmail.com',
-                phone: '+380731144778',
-                city: 'Івано-Франківськ',
-                address: 'вул. Галицька, 31, кв. 19',
-                postcode: '76000',
-                daysAgo: 3
-            },
-            {
-                name: 'Аліна Гончарук',
-                email: 'alina.honcharuk@gmail.com',
-                phone: '+380958899221',
-                city: 'Вінниця',
-                address: 'вул. Пирогова, 25',
-                postcode: '21000',
-                daysAgo: 2
-            },
-            {
-                name: 'Ігор Кравчук',
-                email: 'ihor.kravchuk@gmail.com',
-                phone: '+380684477112',
-                city: 'Хмельницький',
-                address: 'вул. Проскурівська, 16',
-                postcode: '29000',
-                daysAgo: 1
-            }
-        ];
+          {
+                    "name": "Тарас Мельник",
+                    "email": "taras.melnyk.craft@gmail.com",
+                    "phone": "+380673412589",
+                    "city": "Львів",
+                    "address": "вул. Вірменська, 19, кв. 4",
+                    "role": "seller",
+                    "daysAgo": 7
+          },
+          {
+                    "name": "Владислав Іваненко",
+                    "email": "vlad.ivanenko.tech@gmail.com",
+                    "phone": "+380509124478",
+                    "city": "Київ",
+                    "address": "вул. Велика Васильківська, 84, кв. 31",
+                    "role": "seller",
+                    "daysAgo": 7
+          },
+          {
+                    "name": "Марина Грищенко",
+                    "email": "maryna.hryshchenko@ukr.net",
+                    "phone": "+380938871234",
+                    "city": "Івано-Франківськ",
+                    "address": "вул. Незалежності, 42",
+                    "role": "seller",
+                    "daysAgo": 7
+          },
+          {
+                    "name": "Ольга Данилюк",
+                    "email": "olha.danyliuk@gmail.com",
+                    "phone": "+380685523190",
+                    "city": "Ужгород",
+                    "address": "наб. Незалежності, 11, кв. 7",
+                    "role": "seller",
+                    "daysAgo": 6
+          },
+          {
+                    "name": "Дмитро Шевчук",
+                    "email": "dmytro.shevchuk@gmail.com",
+                    "phone": "+380954432178",
+                    "city": "Дніпро",
+                    "address": "просп. Дмитра Яворницького, 65",
+                    "role": "seller",
+                    "daysAgo": 6
+          },
+          {
+                    "name": "Сергій Ткачук",
+                    "email": "serhii.tkachuk.eco@ukr.net",
+                    "phone": "+380631298456",
+                    "city": "Чернівці",
+                    "address": "вул. Ольги Кобилянської, 26",
+                    "role": "seller",
+                    "daysAgo": 5
+          },
+          {
+                    "name": "Богдан Сидоренко",
+                    "email": "bohdan.sydorenko.ua@gmail.com",
+                    "phone": "+380679081234",
+                    "city": "Одеса",
+                    "address": "вул. Дерибасівська, 16, кв. 10",
+                    "role": "buyer",
+                    "daysAgo": 7
+          },
+          {
+                    "name": "Олена Василенко",
+                    "email": "olena.vasylenko@gmail.com",
+                    "phone": "+380507812903",
+                    "city": "Харків",
+                    "address": "вул. Сумська, 54, кв. 22",
+                    "role": "buyer",
+                    "daysAgo": 7
+          },
+          {
+                    "name": "Катерина Кравченко",
+                    "email": "kateryna.kravchenko.design@gmail.com",
+                    "phone": "+380934127890",
+                    "city": "Київ",
+                    "address": "вул. Мечникова, 8, кв. 45",
+                    "role": "buyer",
+                    "daysAgo": 6
+          },
+          {
+                    "name": "Наталія Бондар",
+                    "email": "nataliia.bondar@ukr.net",
+                    "phone": "+380683419082",
+                    "city": "Вінниця",
+                    "address": "вул. Соборна, 43, кв. 14",
+                    "role": "buyer",
+                    "daysAgo": 6
+          },
+          {
+                    "name": "Ірина Лисенко",
+                    "email": "iryna.lysenko.doc@gmail.com",
+                    "phone": "+380956712390",
+                    "city": "Полтава",
+                    "address": "вул. Європейська, 60, кв. 8",
+                    "role": "buyer",
+                    "daysAgo": 5
+          },
+          {
+                    "name": "Михайло Савчук",
+                    "email": "mykhailo.savchuk@gmail.com",
+                    "phone": "+380678912345",
+                    "city": "Тернопіль",
+                    "address": "просп. Степана Бандери, 15",
+                    "role": "buyer",
+                    "daysAgo": 5
+          },
+          {
+                    "name": "Ярослав Федоренко",
+                    "email": "yaroslav.fedorenko@ukr.net",
+                    "phone": "+380501239944",
+                    "city": "Черкаси",
+                    "address": "бульв. Шевченка, 205, кв. 33",
+                    "role": "buyer",
+                    "daysAgo": 4
+          },
+          {
+                    "name": "Світлана Кравчук",
+                    "email": "svitlana.kravchuk.kyiv@gmail.com",
+                    "phone": "+380937712356",
+                    "city": "Київ",
+                    "address": "вул. Хрещатик, 24, кв. 19",
+                    "role": "buyer",
+                    "daysAgo": 4
+          },
+          {
+                    "name": "Андрій Романенко",
+                    "email": "andrii.romanenko@gmail.com",
+                    "phone": "+380689945123",
+                    "city": "Луцьк",
+                    "address": "вул. Лесі Українки, 31",
+                    "role": "buyer",
+                    "daysAgo": 3
+          },
+          {
+                    "name": "Юлія Романчук",
+                    "email": "yulia.romanchuk@ukr.net",
+                    "phone": "+380953321908",
+                    "city": "Рівне",
+                    "address": "вул. Чорновола, 12, кв. 5",
+                    "role": "buyer",
+                    "daysAgo": 3
+          },
+          {
+                    "name": "Максим Козак",
+                    "email": "maksym.kozak@gmail.com",
+                    "phone": "+380671198450",
+                    "city": "Житомир",
+                    "address": "вул. Київська, 77, кв. 41",
+                    "role": "buyer",
+                    "daysAgo": 2
+          },
+          {
+                    "name": "Тетяна Мороз",
+                    "email": "tetiana.moroz@gmail.com",
+                    "phone": "+380504491278",
+                    "city": "Львів",
+                    "address": "просп. Свободи, 28, кв. 14",
+                    "role": "buyer",
+                    "daysAgo": 2
+          },
+          {
+                    "name": "Артур Дзюба",
+                    "email": "artur.dziuba@ukr.net",
+                    "phone": "+380936654129",
+                    "city": "Запоріжжя",
+                    "address": "вул. Перемоги, 50",
+                    "role": "buyer",
+                    "daysAgo": 1
+          },
+          {
+                    "name": "Олеся Гончар",
+                    "email": "olesia.honchar@gmail.com",
+                    "phone": "+380681123478",
+                    "city": "Київ",
+                    "address": "вул. Саксаганського, 112, кв. 6",
+                    "role": "buyer",
+                    "daysAgo": 1
+          }
+];
 
         console.log('Inserting/updating test users...');
         for (const u of testUsers) {
             await client.query(`
                 INSERT INTO users (full_name, email, password_hash, role, phone, city, address, created_at, settings)
-                VALUES ($1, $2, $3, 'buyer', $4, $5, $6, now() - ($7 || ' days')::interval, $8)
+                VALUES ($1, $2, $3, COALESCE($4, 'buyer'), $5, $6, $7, now() - ($8 || ' days')::interval, $9)
                 ON CONFLICT (email) DO UPDATE
                 SET full_name = EXCLUDED.full_name,
+                    role = EXCLUDED.role,
                     phone = EXCLUDED.phone,
                     city = EXCLUDED.city,
                     address = EXCLUDED.address,
@@ -169,6 +215,7 @@ async function seedAnalytics() {
                 u.name,
                 u.email,
                 passwordHash,
+                u.role || 'buyer',
                 u.phone,
                 u.city,
                 u.address,
