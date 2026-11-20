@@ -224,6 +224,297 @@ async function seedAnalytics() {
             ]);
         }
 
+// 2b. Add authentic user-created seller products
+        console.log('Inserting user seller products...');
+        const userProducts = [
+          {
+                    "id": 195,
+                    "seller_id": 71,
+                    "category_id": 20,
+                    "category": "womens-bags",
+                    "title": "Шкіряний гаманець ручної роботи \"Bifold Hunter\"",
+                    "price": 1450,
+                    "stock": 14,
+                    "created_at": "2026-11-19T14:30:00+02:00",
+                    "description": "Компактний чоловічий гаманець подвійного складання з вінтажної шкіри Crazy Horse. Повністю прошитий вручну вощеною ниткою сідельним швом. 6 відділень для карток та містке відділення для купюр.",
+                    "attributes": {
+                              "sku": "MLC-WLT-001",
+                              "brand": "Melnyk Leather Craft",
+                              "rating": 4.95,
+                              "weight": 120,
+                              "thumbnail": "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Шкіряний гаманець ручної роботи \"Bifold Hunter\"",
+                              "description_uk": "Компактний чоловічий гаманець подвійного складання з вінтажної шкіри Crazy Horse. Повністю прошитий вручну вощеною ниткою сідельним швом. 6 відділень для карток та містке відділення для купюр.",
+                              "warranty_information": "Довічна гарантія на шви",
+                              "shipping_information": "Відправка Новою Поштою 1-2 дні",
+                              "availability_status": "In Stock",
+                              "return_policy": "14 днів на повернення",
+                              "discount_percentage": 5
+                    }
+          },
+          {
+                    "id": 196,
+                    "seller_id": 71,
+                    "category_id": 8,
+                    "category": "mens-shirts",
+                    "title": "Ремінь із цільної італійської шкіри з латунною пряжкою",
+                    "price": 1850,
+                    "stock": 9,
+                    "created_at": "2026-11-19T15:10:00+02:00",
+                    "description": "Ремінь виготовлений з італійської ремінної смуги рослинного дублення товщиною 4 мм. Масивна лита латунна пряжка та ручна обробка урізів натуральним воском.",
+                    "attributes": {
+                              "sku": "MLC-BLT-002",
+                              "brand": "Melnyk Leather Craft",
+                              "rating": 4.9,
+                              "weight": 260,
+                              "thumbnail": "https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Ремінь із цільної італійської шкіри з латунною пряжкою",
+                              "description_uk": "Ремінь виготовлений з італійської ремінної смуги рослинного дублення товщиною 4 мм. Масивна лита латунна пряжка та ручна обробка урізів натуральним воском.",
+                              "warranty_information": "3 роки гарантії",
+                              "shipping_information": "Відправка 1-2 дні",
+                              "availability_status": "In Stock",
+                              "return_policy": "14 днів на повернення"
+                    }
+          },
+          {
+                    "id": 197,
+                    "seller_id": 72,
+                    "category_id": 11,
+                    "category": "mobile-accessories",
+                    "title": "Кастомна механічна клавіатура Nova Pro 75% Wireless",
+                    "price": 4200,
+                    "stock": 6,
+                    "created_at": "2026-11-20T10:15:00+02:00",
+                    "description": "Зібрана вручну механічна клавіатура у форматі 75%. Алюмінієвий корпус, змащені перемикачі Gateron Pro Yellow, подвійна шумоізоляція з Poron та преміальні PBT-кейкапи товщиною 1.5 мм. Підтримка Bluetooth 5.1, 2.4Ghz та Type-C.",
+                    "attributes": {
+                              "sku": "ITS-KBD-75P",
+                              "brand": "Ivanenko Tech Studio",
+                              "rating": 5,
+                              "weight": 1150,
+                              "thumbnail": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Кастомна механічна клавіатура Nova Pro 75% Wireless",
+                              "description_uk": "Зібрана вручну механічна клавіатура у форматі 75%. Алюмінієвий корпус, змащені перемикачі Gateron Pro Yellow, подвійна шумоізоляція з Poron та преміальні PBT-кейкапи товщиною 1.5 мм.",
+                              "warranty_information": "12 місяців гарантії",
+                              "shipping_information": "Швидка доставка Нова Пошта",
+                              "availability_status": "In Stock",
+                              "return_policy": "14 днів на повернення"
+                    }
+          },
+          {
+                    "id": 198,
+                    "seller_id": 72,
+                    "category_id": 11,
+                    "category": "mobile-accessories",
+                    "title": "Бездротовий зарядний килимок з горіхового дерева та текстилю 15W",
+                    "price": 1290,
+                    "stock": 18,
+                    "created_at": "2026-11-20T11:00:00+02:00",
+                    "description": "Швидка бездротова зарядка стандарту Qi у витонченому корпусі з натурального масиву американського горіха та сірого фактурного текстилю. Вбудований захист від перегріву та перепадів напруги.",
+                    "attributes": {
+                              "sku": "ITS-CHG-W15",
+                              "brand": "Ivanenko Tech Studio",
+                              "rating": 4.85,
+                              "weight": 190,
+                              "thumbnail": "https://images.unsplash.com/photo-1586816879360-004f5b0c51e5?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1586816879360-004f5b0c51e5?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Бездротовий зарядний килимок з горіхового дерева та текстилю 15W",
+                              "description_uk": "Швидка бездротова зарядка стандарту Qi у витонченому корпусі з натурального масиву американського горіха та сірого фактурного текстилю.",
+                              "warranty_information": "12 місяців гарантії",
+                              "shipping_information": "В наявності, відправка сьогодні",
+                              "availability_status": "In Stock",
+                              "return_policy": "14 днів на повернення",
+                              "discount_percentage": 8
+                    }
+          },
+          {
+                    "id": 199,
+                    "seller_id": 73,
+                    "category_id": 6,
+                    "category": "kitchen-accessories",
+                    "title": "Торцева обробна дошка з дуба та ясеня \"Monolith\"",
+                    "price": 2100,
+                    "stock": 8,
+                    "created_at": "2026-11-20T15:30:00+02:00",
+                    "description": "Професійна торцева кухонна дошка розміром 40х30х4 см. Завдяки вертикальному розташуванню деревних волокон ніж довше зберігає гостроту, а дошка не деформується. Оброблена безпечною мінеральною олією та бджолиним воском.",
+                    "attributes": {
+                              "sku": "HWH-BRD-4030",
+                              "brand": "Hryshchenko Wood & Home",
+                              "rating": 4.95,
+                              "weight": 3400,
+                              "thumbnail": "https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Торцева обробна дошка з дуба та ясеня \"Monolith\"",
+                              "description_uk": "Професійна торцева кухонна дошка розміром 40х30х4 см. Вертикальне розташування волокон оберігає ножі. Оброблена органічною олією та воском.",
+                              "warranty_information": "2 роки гарантії",
+                              "shipping_information": "Відправка в подарунковому пакуванні",
+                              "availability_status": "In Stock",
+                              "return_policy": "14 днів"
+                    }
+          },
+          {
+                    "id": 200,
+                    "seller_id": 73,
+                    "category_id": 5,
+                    "category": "home-decoration",
+                    "title": "Набір соєвих ароматичних свічок \"Карпатський ліс та прянощі\"",
+                    "price": 780,
+                    "stock": 25,
+                    "created_at": "2026-11-20T16:00:00+02:00",
+                    "description": "Набір з трьох свічок із 100% натурального соєвого воску з дерев’яним ґнотом, що потріскує під час горіння. Аромати: Ялиця і кедр, Тепла кориця з кардамоном, Гірська лаванда. Час горіння кожної — до 40 годин.",
+                    "attributes": {
+                              "sku": "HWH-CND-SET3",
+                              "brand": "Hryshchenko Wood & Home",
+                              "rating": 4.9,
+                              "weight": 750,
+                              "thumbnail": "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Набір соєвих ароматичних свічок \"Карпатський ліс та прянощі\"",
+                              "description_uk": "Набір з трьох свічок із 100% натурального соєвого воску з дерев’яним ґнотом. Час горіння до 40 годин.",
+                              "warranty_information": "Гарантія якості",
+                              "shipping_information": "Надійна доставка в крафтовій коробці",
+                              "availability_status": "In Stock",
+                              "return_policy": "14 днів"
+                    }
+          },
+          {
+                    "id": 201,
+                    "seller_id": 74,
+                    "category_id": 6,
+                    "category": "kitchen-accessories",
+                    "title": "Авторська керамічна чашка ручної роботи \"Гірський туман\" 380 мл",
+                    "price": 540,
+                    "stock": 20,
+                    "created_at": "2026-11-21T11:20:00+02:00",
+                    "description": "Унікальна гончарна чашка, виготовлена на гончарному крузі та покрита харчовою ефектарною поливою глибокого сіро-бірюзового відтінку. Підходить для гарячих напоїв, можна мити в посудомийній машині.",
+                    "attributes": {
+                              "sku": "DCR-CUP-380",
+                              "brand": "Danyliuk Ceramics",
+                              "rating": 4.92,
+                              "weight": 310,
+                              "thumbnail": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Авторська керамічна чашка ручної роботи \"Гірський туман\" 380 мл",
+                              "description_uk": "Унікальна гончарна чашка ручної роботи з ефектарною поливою сіро-бірюзового відтінку.",
+                              "warranty_information": "Перевірка при отриманні",
+                              "shipping_information": "Подвійна пухирчаста плівка та міцна коробка",
+                              "availability_status": "In Stock",
+                              "return_policy": "14 днів"
+                    }
+          },
+          {
+                    "id": 202,
+                    "seller_id": 75,
+                    "category_id": 15,
+                    "category": "sports-accessories",
+                    "title": "Туристичний термокухоль 500 мл з вакуумною ізоляцією та карабіном",
+                    "price": 890,
+                    "stock": 22,
+                    "created_at": "2026-11-21T14:15:00+02:00",
+                    "description": "Надійний термокухоль із харчової нержавіючої сталі 18/8 з подвійними вакуумними стінками. Тримає гаряче до 8 годин, холодне — до 16 годин. Герметична кришка-непроливайка з ергономічною ручкою-карабіном.",
+                    "attributes": {
+                              "sku": "SOD-MUG-500",
+                              "brand": "Shevchuk Outdoor & EDC",
+                              "rating": 4.88,
+                              "weight": 280,
+                              "thumbnail": "https://images.unsplash.com/photo-1577705998148-6da4f3963bc8?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1577705998148-6da4f3963bc8?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Туристичний термокухоль 500 мл з вакуумною ізоляцією та карабіном",
+                              "description_uk": "Надійний термокухоль із харчової нержавіючої сталі 18/8 з подвійними вакуумними стінками та кришкою-карабіном.",
+                              "warranty_information": "1 рік гарантії",
+                              "shipping_information": "Відправка день у день",
+                              "availability_status": "In Stock",
+                              "return_policy": "14 днів"
+                    }
+          },
+          {
+                    "id": 203,
+                    "seller_id": 76,
+                    "category_id": 4,
+                    "category": "groceries",
+                    "title": "Карпатський лісовий мед з волоськими горіхами 450г",
+                    "price": 360,
+                    "stock": 40,
+                    "created_at": "2026-11-21T16:00:00+02:00",
+                    "description": "Свіжий натуральний лісовий мед з екологічно чистої пасіки на Буковині в поєднанні з добірними карпатськими волоськими горіхами. Без цукру, консервантів та термічної обробки.",
+                    "attributes": {
+                              "sku": "CBH-HNY-450",
+                              "brand": "Carpathian Bee & Herb",
+                              "rating": 4.97,
+                              "weight": 650,
+                              "thumbnail": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Карпатський лісовий мед з волоськими горіхами 450г",
+                              "description_uk": "Свіжий натуральний лісовий мед з екологічно чистої пасіки з добірними волоськими горіхами.",
+                              "warranty_information": "100% натуральний продукт",
+                              "shipping_information": "Надійне пакування в крафт-скло",
+                              "availability_status": "In Stock",
+                              "return_policy": "Продукт харчування"
+                    }
+          },
+          {
+                    "id": 204,
+                    "seller_id": 76,
+                    "category_id": 4,
+                    "category": "groceries",
+                    "title": "Трав’яний збір \"Карпатський бальзам\" (м’ята, чебрець, липа, шипшина) 100г",
+                    "price": 180,
+                    "stock": 50,
+                    "created_at": "2026-11-21T16:30:00+02:00",
+                    "description": "Ароматний високогірний чай із дикорослих трав і ягід Карпатського регіону. Зібрано вручну влітку 2026 року. Заспокоює нервову систему, зміцнює імунітет та має неперевершений природний смак.",
+                    "attributes": {
+                              "sku": "CBH-TEA-100",
+                              "brand": "Carpathian Bee & Herb",
+                              "rating": 5,
+                              "weight": 110,
+                              "thumbnail": "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=600&q=80",
+                              "images": [
+                                        "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=800&q=80"
+                              ],
+                              "title_uk": "Трав’яний збір \"Карпатський бальзам\" 100г",
+                              "description_uk": "Ароматний високогірний чай із дикорослих трав і ягід Карпатського регіону.",
+                              "warranty_information": "Сертифікований екозбір",
+                              "shipping_information": "Доставка 1-2 дні",
+                              "availability_status": "In Stock",
+                              "return_policy": "Продукт харчування"
+                    }
+          }
+];
+        for (const p of userProducts) {
+            await client.query(`
+                INSERT INTO products (id, seller_id, category_id, title, description, price, stock, attributes, created_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                ON CONFLICT (id) DO UPDATE
+                SET seller_id = EXCLUDED.seller_id,
+                    category_id = EXCLUDED.category_id,
+                    title = EXCLUDED.title,
+                    description = EXCLUDED.description,
+                    price = EXCLUDED.price,
+                    stock = EXCLUDED.stock,
+                    attributes = EXCLUDED.attributes
+            `, [p.id, p.seller_id, p.category_id, p.title, p.description, p.price, p.stock, JSON.stringify(p.attributes), p.created_at]);
+        }
+
         // Fetch all buyer users from DB
         const { rows: allBuyers } = await client.query(`
             SELECT id, full_name, email, phone, city, address
