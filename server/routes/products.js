@@ -12,10 +12,20 @@ router.all('/', async (req, res) => {
 
     try {
         if (action === 'list') {
-            let limit = parseInt(req.query.limit, 10) || 200;
-            limit = Math.max(1, Math.min(limit, 500));
+            let limit = parseInt(req.query.limit, 10) || 1000;
+            limit = Math.max(1, Math.min(limit, 1000));
+            const q = (req.query.q || req.query.search || '').trim();
 
-            const { rows } = await db.query(`${PRODUCT_SELECT} ORDER BY p.id ASC LIMIT $1`, [limit]);
+            let queryText = PRODUCT_SELECT;
+            const params = [];
+            if (q) {
+                params.push(`%${q}%`);
+                queryText += ` WHERE (p.title ILIKE $1 OR p.description ILIKE $1 OR p.attributes->>'title_uk' ILIKE $1 OR p.attributes->>'description_uk' ILIKE $1 OR p.attributes->>'brand' ILIKE $1 OR c.name ILIKE $1 OR u.full_name ILIKE $1)`;
+            }
+            params.push(limit);
+            queryText += ` ORDER BY p.id ASC LIMIT $${params.length}`;
+
+            const { rows } = await db.query(queryText, params);
             return res.json({ success: true, products: rows.map(mapProductRow) });
         }
 

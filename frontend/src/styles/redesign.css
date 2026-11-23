@@ -88,9 +88,10 @@
 .nv-mega-item i { width: 20px; text-align: center; color: var(--nv-accent); }
 .nv-mega-item:hover { background: var(--nv-panel-2); color: var(--nv-accent); }
 
-.nv-search { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; background: var(--nv-bg); border: 1.5px solid var(--nv-line); border-radius: 12px; height: 46px; transition: .2s; }
-.nv-search:focus-within { border-color: var(--nv-accent); box-shadow: 0 0 0 4px rgba(var(--nv-accent-rgb), .15); }
-.nv-search-icon { margin-left: 14px; color: var(--nv-muted); }
+.nv-search { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; background: var(--nv-bg); border: 1.5px solid var(--nv-line); border-radius: 12px; height: 46px; transition: border-color .25s ease, box-shadow .25s ease, background .25s ease; }
+.nv-search:focus-within { border-color: #38bdf8; background: var(--nv-panel, rgba(255, 255, 255, .03)); box-shadow: 0 0 0 3.5px rgba(56, 189, 248, .22), 0 0 18px rgba(56, 189, 248, .12); }
+.nv-search-icon { margin-left: 14px; color: var(--nv-muted); transition: color .2s ease; }
+.nv-search:focus-within .nv-search-icon { color: #38bdf8; }
 .nv-search input { flex: 1; min-width: 0; height: 100%; padding: 0 12px; border: 0; background: transparent; color: var(--nv-text); font-size: 15px; outline: none; }
 .nv-search-clear { border: 0; background: transparent; color: var(--nv-muted); width: 32px; cursor: pointer; }
 .nv-search-btn { height: calc(100% - 8px); margin: 4px; padding: 0 18px; border: 0; border-radius: 9px; background: var(--nv-accent); color: var(--nv-ink); font-weight: 600; cursor: pointer; }

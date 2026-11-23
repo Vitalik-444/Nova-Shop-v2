@@ -38,7 +38,25 @@ function SearchBox() {
         const titleEn = (product.titleEn || product.title || "").toLowerCase();
         const titleUk = (product.titleUk || "").toLowerCase();
         const brand = (product.brand || "").toLowerCase();
-        return titleEn.includes(value) || titleUk.includes(value) || brand.includes(value) || tProduct(product).toLowerCase().includes(value);
+        const desc = (product.description || "").toLowerCase();
+        const descUk = (product.descriptionUk || "").toLowerCase();
+        const cat = (product.category || "").toLowerCase();
+        const catUk = (product.categoryUk || "").toLowerCase();
+        const catEn = (product.categoryEn || "").toLowerCase();
+        const seller = (product.seller || "").toLowerCase();
+        const localized = tProduct(product).toLowerCase();
+        return (
+          titleEn.includes(value) ||
+          titleUk.includes(value) ||
+          brand.includes(value) ||
+          desc.includes(value) ||
+          descUk.includes(value) ||
+          cat.includes(value) ||
+          catUk.includes(value) ||
+          catEn.includes(value) ||
+          seller.includes(value) ||
+          localized.includes(value)
+        );
       })
       .slice(0, 6);
   }, [products, value, tProduct]);

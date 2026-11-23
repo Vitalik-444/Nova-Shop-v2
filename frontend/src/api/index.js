@@ -31,7 +31,7 @@ async function safe(task, fallback) {
   }
 }
 
-export function getProducts(limit = 200) {
+export function getProducts(limit = 1000) {
   return safe(async () => {
     const data = await request(`${PRODUCTS_URL}?action=list&limit=${limit}`);
     return data.success ? data.products : [];
@@ -42,7 +42,7 @@ let productsPromise = null;
 
 export function getProductsCached() {
   if (!productsPromise) {
-    productsPromise = getProducts(500).then(list => {
+    productsPromise = getProducts(1000).then(list => {
       if (!list.length) productsPromise = null;
       return list;
     });
