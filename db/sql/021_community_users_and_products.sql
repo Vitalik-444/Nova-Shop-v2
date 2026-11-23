@@ -257,70 +257,7 @@ BEGIN
     VALUES (142, 197, 1, 4200)
     ON CONFLICT (order_id, product_id) DO NOTHING;
 
-    -- 5. Відгуки
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (24, 33, 1, 5, 'ГИ4ЖКМОГИ4КМ4ТЕМ', '2026-11-09T19:12:20.237273+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (25, 113, 29, 5, 'Відмінна якість матеріалів, дуже приємно користуватися.', '2026-11-09T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (26, 90, 17, 5, 'Купую вже вдруге в цьому магазині — сервіс на найвищому рівні!', '2026-11-08T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (27, 157, 35, 4, 'Якістю задоволений, єдине що доставка зайняла трохи більше часу, ніж очікував.', '2026-11-10T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (28, 54, 10, 5, 'Відмінна якість матеріалів, дуже приємно користуватися.', '2026-11-12T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (29, 163, 30, 5, 'Відмінна якість матеріалів, дуже приємно користуватися.', '2026-11-05T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (30, 188, 24, 5, 'Чудовий товар! Якість перевершила очікування, повністю відповідає опису.', '2026-10-31T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (31, 90, 40, 4, 'Якістю задоволений, єдине що доставка зайняла трохи більше часу, ніж очікував.', '2026-11-16T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (32, 190, 30, 5, 'Відмінна якість матеріалів, дуже приємно користуватися.', '2026-11-16T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (33, 33, 29, 4, 'Хороший товар за свої гроші. Все працює відмінно, рекомендую до покупки.', '2026-11-14T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (34, 115, 34, 5, 'Все супер, відповідає фотографіям та характеристикам. 5 зірок!', '2026-10-26T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (35, 51, 37, 5, 'Купую вже вдруге в цьому магазині — сервіс на найвищому рівні!', '2026-11-10T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (36, 34, 10, 5, 'Дуже задоволений покупкою. Швидка доставка і надійне пакування.', '2026-10-27T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (37, 168, 32, 5, 'Відмінна якість матеріалів, дуже приємно користуватися.', '2026-11-14T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (38, 168, 39, 4, 'Гарна річ, повністю виконує свої функції. Співвідношення ціна/якість топ.', '2026-11-11T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (39, 144, 23, 5, 'Відмінна якість матеріалів, дуже приємно користуватися.', '2026-10-31T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (40, 159, 23, 4, 'Хороший товар за свої гроші. Все працює відмінно, рекомендую до покупки.', '2026-10-25T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (41, 92, 23, 4, 'Гарна річ, повністю виконує свої функції. Співвідношення ціна/якість топ.', '2026-11-10T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (42, 183, 32, 5, 'Все супер, відповідає фотографіям та характеристикам. 5 зірок!', '2026-11-12T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (43, 80, 18, 4, 'Хороший товар за свої гроші. Все працює відмінно, рекомендую до покупки.', '2026-11-05T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
-    INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
-    VALUES (44, 145, 27, 5, 'Відмінна якість матеріалів, дуже приємно користуватися.', '2026-11-02T14:41:15.525098+00:00'::timestamptz)
-    ON CONFLICT (id) DO NOTHING;
+    -- 5. Відгуки для нових авторських товарів (IDs 195-204)
     INSERT INTO product_reviews (id, product_id, buyer_id, rating, comment, created_at)
     VALUES (23, 195, 77, 5, 'Чудовий гаманець! Шкіра Crazy Horse дуже приємна на дотик, шви рівні та міцні. Окреме спасибі майстру Тарасу за швидку відправку.', '2026-11-25T11:30:00+02:00'::timestamptz)
     ON CONFLICT (id) DO NOTHING;
