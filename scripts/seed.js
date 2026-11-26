@@ -36,7 +36,7 @@ const SERIAL = ['users', 'categories', 'products', 'orders', 'product_reviews'];
 
     if (isAuto) {
         try {
-            const check = await client.query("SELECT 1 FROM products WHERE id >= 195 LIMIT 1");
+            const check = await client.query("SELECT 1 FROM products WHERE id >= 284 LIMIT 1");
             if (check.rowCount > 0) {
                 console.log("[Seed] База даних уже містить оригінальні та авторські товари NovaShop. Пропуск завантаження.");
                 await client.end();
